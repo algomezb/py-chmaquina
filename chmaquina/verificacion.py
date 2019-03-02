@@ -172,7 +172,7 @@ class VerificadorCh(object):
             self.numero_de_argumentos(argumentos, 2)
             for variable in argumentos:
                 self.ya_definida(variable)
-        elif instruccion in ["muestre", "imprima"]:
+        elif instruccion in ("muestre", "imprima"):
             self.numero_de_argumentos(argumentos, 1)
             variable, = argumentos
             if variable != "acumulador":

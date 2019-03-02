@@ -166,3 +166,19 @@ def test_vaya_etiquetas_indefinidas():
     programa = "vaya fin"
     with pytest.raises(ErrorDeSintaxis):
         verificar(programa)
+
+
+def test_vaya_etiquetas_definidas():
+    programa = "\n".join(["etiqueta fin 13", "vaya fin"])
+    verificar(programa)
+
+
+def test_vayasi_etiquetas_indefinidas():
+    programa = "vayasi itera fin"
+    with pytest.raises(ErrorDeSintaxis):
+        verificar(programa)
+
+
+def test_vayasi_etiquetas_definidas():
+    programa = "\n".join(["etiqueta a 1", "etiqueta b 3", "vayasi a b"])
+    verificar(programa)
