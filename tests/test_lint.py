@@ -39,8 +39,6 @@ OPERACIONES_CON_VARIABLES = [
     "potencia",
     "modulo",
     "concatene",
-    "elimine",
-    "extraiga",
 ]
 
 OPERACIONES_LOGICAS = ["Y", "O"]
@@ -49,10 +47,13 @@ OPERACIONES_DE_CONTROL = ["vaya", "vayasi"]
 
 OPERACIONES_DE_IO = ["muestre", "imprima"]
 
+OPERACIONES_CON_CADENAS = ["elimine", "extraiga"]
+
 TODAS_LAS_OPERACIONES = (
     OPERACIONES_CON_VARIABLES
     + OPERACIONES_LOGICAS
     + OPERACIONES_DE_CONTROL
+    + OPERACIONES_CON_CADENAS
     + OPERACIONES_DE_IO
 )
 
@@ -100,7 +101,7 @@ def test_nueva_valor_tipo_incorrecto(tipo, valor):
     "tipo,valor", [("I", "1"), ("I", "14"), ("R", "3.14"), ("L", "1")]
 )
 def test_nueva_valor_tipo_correcto(tipo, valor):
-    programa = f"nueva etiqueta {tipo} {valor}"
+    programa = f"nueva variable {tipo} {valor}"
     verificar(programa)
 
 
@@ -182,3 +183,14 @@ def test_vayasi_etiquetas_indefinidas():
 def test_vayasi_etiquetas_definidas():
     programa = "\n".join(["etiqueta a 1", "etiqueta b 3", "vayasi a b"])
     verificar(programa)
+
+
+def test_extraiga_con_cadenas():
+    with pytest.raises(ErrorDeSintaxis):
+        verificar("extraiga hola")
+    with pytest.raises(ErrorDeSintaxis):
+        verificar("extraiga 1.2")
+
+
+def test_extraiga_con_argumentos_correctos():
+    verificar("extraiga 1")

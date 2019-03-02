@@ -114,11 +114,12 @@ class VerificadorCh(object):
         if not tokens:
             # Linea vacía
             return
-        if linea.startswith("#"):
+        if linea.startswith("//"):
             # comentario
             return
         instruccion, *argumentos = tokens
         if instruccion == "nueva":
+            # nueva variable C hola que hace
             # nueva <variable> <tipo> [valor... valor valor]
             instruccion, *argumentos = linea.split(maxsplit=3)
             self.numero_de_argumentos(argumentos, 2, 3)
@@ -156,13 +157,19 @@ class VerificadorCh(object):
             "potencia",
             "modulo",
             "concatene",
-            "elimine",
-            "extraiga",
         ):
             # operador <variable>
             self.numero_de_argumentos(argumentos, 1)
             variable, = argumentos
             self.ya_definida(variable)
+        elif instruccion == "elimine":
+            # elimine <cadena>
+            self.numero_de_argumentos(argumentos, 1)
+        elif instruccion == "extraiga":
+            # elimine <numero>
+            self.numero_de_argumentos(argumentos, 1)
+            numero, = argumentos
+            self.es_de_tipo("I", numero)
         elif instruccion in ("Y", "O"):
             # operador <variable> <variable> <variable>
             self.numero_de_argumentos(argumentos, 3)
