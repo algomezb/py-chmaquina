@@ -161,7 +161,7 @@ class InterfazChMaquina:
             }
         )
 
-        if self.estado is None or self.maquina is None:
+        if apagada:
             # maquina apagada
             self.tabla_memoria.set_model(None)
             self.tabla_etiquetas.set_model(None)
