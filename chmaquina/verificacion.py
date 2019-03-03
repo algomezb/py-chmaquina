@@ -83,7 +83,7 @@ class VerificadorCh(object):
             if not re.match(r"^-?\d+$", valor):
                 raise ErrorDeSintaxis(f"El valor '{valor}' no es de tipo {tipo}")
         elif tipo == "R":
-            if not re.match(r"^-?\d+\.?\d+$", valor):
+            if not re.match(r"^-?\d+\.?\d*$", valor):
                 raise ErrorDeSintaxis(f"El valor '{valor}' no es de tipo {tipo}")
         elif tipo == "L":
             if valor not in ["0", "1"]:

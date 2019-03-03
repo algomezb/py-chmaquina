@@ -1,6 +1,6 @@
 import pytest
 
-from chmaquina.maquina import Maquina, ChProgramaInvalido
+from chmaquina.maquina import Maquina, ChProgramaInvalido, ErrorDeEjecucion
 
 
 def verificar_estados_iguales(estado, otro, menos=None):
@@ -198,3 +198,51 @@ def test_lea_variable(maquina):
     programa_cargado = maquina.cargar(estado, "\n".join(instrucciones))
     nuevo = maquina.correr(programa_cargado, pasos=3)
     assert nuevo.buscar_variable("000", "variable")["valor"] == "entrada de usuario"
+
+
+@pytest.mark.parametrize(
+    "operacion,a,b,resultado",
+    [
+        ("sume", "1", "3", "4"),
+        ("reste", "1", "3", "-2"),
+        ("multiplique", "3", "3", "9"),
+        ("divida", "3", "2", "1.5"),
+        ("potencia", "3", "2", "9"),
+        ("modulo", "3", "2", "1"),
+    ],
+)
+def test_operaciones_aritmeticas(maquina, operacion, a, b, resultado):
+    instrucciones = [
+        f"nueva a R {a}",
+        f"nueva b R {b}",
+        "cargue a",
+        f"{operacion} b",
+        "retorne 0",
+    ]
+    estado = maquina.encender()
+    programa_cargado = maquina.cargar(estado, "\n".join(instrucciones))
+    nuevo = maquina.correr(programa_cargado, pasos=4)
+    # TODO: No se debe hacer esta comparación entre flotantes
+    assert float(nuevo.acumulador()) == float(resultado)
+
+
+@pytest.mark.parametrize(
+    "operacion,a,b,resultado",
+    [
+        ("divida", "3", "0", "1.5"),
+        ("potencia", "0", "-2", "9"),
+        ("modulo", "3", "0", "1"),
+    ],
+)
+def test_operaciones_aritmeticas_invalidas(maquina, operacion, a, b, resultado):
+    instrucciones = [
+        f"nueva a R {a}",
+        f"nueva b R {b}",
+        "cargue a",
+        f"{operacion} b",
+        "retorne 0",
+    ]
+    estado = maquina.encender()
+    programa_cargado = maquina.cargar(estado, "\n".join(instrucciones))
+    with pytest.raises(ErrorDeEjecucion):
+        maquina.correr(programa_cargado, pasos=4)

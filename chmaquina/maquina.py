@@ -9,6 +9,12 @@ class ChProgramaInvalido(Exception):
     """
 
 
+class ErrorDeEjecucion(Exception):
+    """
+    Indica que hubo un error en la ejecución del programa.
+    """
+
+
 class TecladoEnConsola(object):
     """
     Un teclado que lee por consola.
@@ -132,6 +138,33 @@ class Maquina(object):
             variable, = argumentos
             valor = self.teclado.leer()
             nuevo_estado.asignar_variable(programa, variable, valor)
+        elif operacion in (
+            "sume",
+            "reste",
+            "multiplique",
+            "divida",
+            "potencia",
+            "modulo",
+        ):
+            variable, = argumentos
+            acumulador = float(nuevo_estado.acumulador("0"))
+            variable = float(nuevo_estado.buscar_variable(programa, variable)["valor"])
+            if operacion == "sume":
+                resultado = acumulador + variable
+            if operacion == "reste":
+                resultado = acumulador - variable
+            if operacion == "multiplique":
+                resultado = acumulador * variable
+            try:
+                if operacion == "divida":
+                    resultado = acumulador / variable
+                if operacion == "potencia":
+                    resultado = acumulador ** variable
+                if operacion == "modulo":
+                    resultado = acumulador % variable
+            except ZeroDivisionError:
+                raise ErrorDeEjecucion("Se encontró una division por cero.")
+            nuevo_estado.asignar_acumulador(str(resultado))
         nuevo_estado.incrementar_contador()
         return nuevo_estado
 
