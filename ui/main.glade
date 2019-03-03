@@ -231,6 +231,7 @@
                       <object class="GtkTreeView" id="tabla-variables">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
+                        <property name="enable_grid_lines">horizontal</property>
                         <child internal-child="selection">
                           <object class="GtkTreeSelection"/>
                         </child>
@@ -277,6 +278,7 @@
                       <object class="GtkTreeView" id="tabla-etiquetas">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
+                        <property name="enable_grid_lines">horizontal</property>
                         <child internal-child="selection">
                           <object class="GtkTreeSelection"/>
                         </child>
@@ -323,6 +325,7 @@
                       <object class="GtkTreeView" id="tabla-memoria">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
+                        <property name="enable_grid_lines">horizontal</property>
                         <child internal-child="selection">
                           <object class="GtkTreeSelection"/>
                         </child>

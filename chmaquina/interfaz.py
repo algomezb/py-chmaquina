@@ -66,7 +66,6 @@ class InterfazChMaquina:
         self.maquina = None
         self.estado = None
         self.ventana = constructor.get_object("chmaquina")
-        self.area_pantalla = constructor.get_object("area-pantalla")
         self.tabla_memoria = constructor.get_object("tabla-memoria")
         self.tabla_variables = constructor.get_object("tabla-variables")
         self.tabla_etiquetas = constructor.get_object("tabla-etiquetas")
@@ -96,20 +95,6 @@ class InterfazChMaquina:
             pantalla=PantallaGtk(self.constructor.get_object("area-pantalla")),
         )
         self.actualizar_estado(self.maquina.encender())
-        self.actualizar_estado(
-            self.maquina.cargar(
-                self.estado,
-                "\n".join(
-                    [
-                        "nueva variable C hola interfaz",
-                        "cargue variable",
-                        "imprima variable",
-                        "muestre variable",
-                        "retorne 0",
-                    ]
-                ),
-            )
-        )
 
     def on_siguiente_clicked(self, widget):
         self.actualizar_estado(self.maquina.paso(self.estado))
@@ -122,7 +107,35 @@ class InterfazChMaquina:
         self.actualizar_estado(None)
 
     def on_cargar_clicked(self, widget):
-        print("cargar archivo")
+        dialog = Gtk.FileChooserDialog(
+            "Por favor escoja un ch programa",
+            self.ventana,
+            Gtk.FileChooserAction.OPEN,
+            (
+                Gtk.STOCK_CANCEL,
+                Gtk.ResponseType.CANCEL,
+                Gtk.STOCK_OPEN,
+                Gtk.ResponseType.OK,
+            ),
+        )
+        filter_text = Gtk.FileFilter()
+        filter_text.set_name("CH Programas")
+        filter_text.add_pattern("*.ch")
+        dialog.add_filter(filter_text)
+
+        filter_any = Gtk.FileFilter()
+        filter_any.set_name("Any files")
+        filter_any.add_pattern("*")
+        dialog.add_filter(filter_any)
+
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+            with open(dialog.get_filename()) as programa:
+                self.actualizar_estado(
+                    self.maquina.cargar(self.estado, programa.read())
+                )
+
+        dialog.destroy()
 
     def actualizar_estado(self, estado):
         self.estado = estado
@@ -153,6 +166,8 @@ class InterfazChMaquina:
             self.tabla_memoria.set_model(None)
             self.tabla_etiquetas.set_model(None)
             self.tabla_variables.set_model(None)
+            self.constructor.get_object("area-impresion").set_buffer(Gtk.TextBuffer())
+            self.constructor.get_object("area-pantalla").set_buffer(Gtk.TextBuffer())
             return
 
         store = Gtk.ListStore(str, str, str, str)
