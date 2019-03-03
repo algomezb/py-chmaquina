@@ -38,7 +38,6 @@ OPERACIONES_CON_VARIABLES = [
     "divida",
     "potencia",
     "modulo",
-    "concatene",
 ]
 
 OPERACIONES_LOGICAS = ["Y", "O"]
@@ -47,7 +46,7 @@ OPERACIONES_DE_CONTROL = ["vaya", "vayasi"]
 
 OPERACIONES_DE_IO = ["muestre", "imprima"]
 
-OPERACIONES_CON_CADENAS = ["elimine", "extraiga"]
+OPERACIONES_CON_CADENAS = ["concatene", "elimine", "extraiga"]
 
 TODAS_LAS_OPERACIONES = (
     OPERACIONES_CON_VARIABLES

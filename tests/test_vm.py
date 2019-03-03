@@ -246,3 +246,20 @@ def test_operaciones_aritmeticas_invalidas(maquina, operacion, a, b, resultado):
     programa_cargado = maquina.cargar(estado, "\n".join(instrucciones))
     with pytest.raises(ErrorDeEjecucion):
         maquina.correr(programa_cargado, pasos=4)
+
+
+@pytest.mark.parametrize(
+    "operacion,a,b,resultado",
+    [
+        ("concatene", "ho", "la", "hola"),
+        ("elimine", "holala", "la", "ho"),
+        ("extraiga", "hola", "3", "hol"),
+    ],
+)
+def test_operaciones_con_cadenas(maquina, operacion, a, b, resultado):
+    instrucciones = [f"nueva a C {a}", "cargue a", f"{operacion} {b}", "retorne 0"]
+    estado = maquina.encender()
+    programa_cargado = maquina.cargar(estado, "\n".join(instrucciones))
+    nuevo = maquina.correr(programa_cargado, pasos=3)
+    # TODO: No se debe hacer esta comparación entre flotantes
+    assert nuevo.acumulador() == resultado

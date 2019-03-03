@@ -165,6 +165,16 @@ class Maquina(object):
             except ZeroDivisionError:
                 raise ErrorDeEjecucion("Se encontró una division por cero.")
             nuevo_estado.asignar_acumulador(str(resultado))
+        elif operacion in ("concatene", "elimine", "extraiga"):
+            operando, = argumentos
+            acumulador = nuevo_estado.acumulador(" ")
+            if operacion == "concatene":
+                resultado = acumulador + operando
+            if operacion == "elimine":
+                resultado = acumulador.replace(operando, "")
+            if operacion == "extraiga":
+                resultado = acumulador[: int(operando)]
+            nuevo_estado.asignar_acumulador(resultado)
         nuevo_estado.incrementar_contador()
         return nuevo_estado
 

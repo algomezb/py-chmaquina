@@ -164,13 +164,12 @@ class VerificadorCh(object):
             "divida",
             "potencia",
             "modulo",
-            "concatene",
         ):
             # operador <variable>
             self.numero_de_argumentos(argumentos, 1)
             variable, = argumentos
             self.ya_definida(variable)
-        elif instruccion == "elimine":
+        elif instruccion == "elimine" or instruccion == "concatene":
             # elimine <cadena>
             self.numero_de_argumentos(argumentos, 1)
         elif instruccion == "extraiga":
