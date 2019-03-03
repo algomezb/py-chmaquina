@@ -233,7 +233,7 @@ class Maquina(object):
         return nuevo_estado
 
     def correr(self, estado, pasos=None):
-        nuevo_estado = estado
+        nuevo_estado = estado.copiar()
         if pasos is None:
             while not nuevo_estado.nada_por_hacer():
                 nuevo_estado = self.paso(nuevo_estado)
@@ -243,6 +243,12 @@ class Maquina(object):
             nuevo_estado = self.paso(nuevo_estado)
 
         return nuevo_estado
+
+    def iterar(self, estado):
+        nuevo_estado = estado.copiar()
+        while not nuevo_estado.nada_por_hacer():
+            nuevo_estado = self.paso(nuevo_estado)
+            yield nuevo_estado
 
     def cargar(self, estado, programa):
         """
