@@ -263,3 +263,42 @@ def test_operaciones_con_cadenas(maquina, operacion, a, b, resultado):
     nuevo = maquina.correr(programa_cargado, pasos=3)
     # TODO: No se debe hacer esta comparación entre flotantes
     assert nuevo.acumulador() == resultado
+
+
+@pytest.mark.parametrize(
+    "operacion,a,b,resultado",
+    [
+        ("O", "1", "0", "1"),
+        ("O", "0", "0", "0"),
+        ("Y", "1", "0", "0"),
+        ("Y", "1", "1", "1"),
+    ],
+)
+def test_operaciones_logicas(maquina, operacion, a, b, resultado):
+    instrucciones = [
+        f"nueva a L {a}",
+        f"nueva b L {b}",
+        f"nueva resultado L",
+        f"{operacion} a b resultado",
+        "retorne 0",
+    ]
+    estado = maquina.encender()
+    programa_cargado = maquina.cargar(estado, "\n".join(instrucciones))
+    nuevo = maquina.correr(programa_cargado, pasos=4)
+    # TODO: No se debe hacer esta comparación entre flotantes
+    assert nuevo.buscar_variable("000", "resultado")["valor"] == resultado
+
+
+@pytest.mark.parametrize("operando,resultado", [("0", "1"), ("1", "0")])
+def test_operacion_no(maquina, operando, resultado):
+    instrucciones = [
+        f"nueva operando L {operando}",
+        f"nueva resultado L",
+        "NO operando resultado",
+        "retorne 0",
+    ]
+    estado = maquina.encender()
+    programa_cargado = maquina.cargar(estado, "\n".join(instrucciones))
+    nuevo = maquina.correr(programa_cargado, pasos=3)
+    # TODO: No se debe hacer esta comparación entre flotantes
+    assert nuevo.buscar_variable("000", "resultado")["valor"] == resultado

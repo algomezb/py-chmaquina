@@ -175,6 +175,21 @@ class Maquina(object):
             if operacion == "extraiga":
                 resultado = acumulador[: int(operando)]
             nuevo_estado.asignar_acumulador(resultado)
+        elif operacion in ("Y", "O"):
+            a, b, salida, = argumentos
+            a = estado.buscar_variable(programa, a)["valor"] == "1"
+            b = estado.buscar_variable(programa, b)["valor"] == "1"
+            if operacion == "O":
+                resultado = "1" if a or b else "0"
+            if operacion == "Y":
+                resultado = "1" if a and b else "0"
+            nuevo_estado.asignar_variable(programa, salida, resultado)
+        elif operacion == "NO":
+            operando, salida, = argumentos
+            operando = estado.buscar_variable(programa, operando)["valor"] == "1"
+            resultado = "1" if not operando else "0"
+            nuevo_estado.asignar_variable(programa, salida, resultado)
+
         nuevo_estado.incrementar_contador()
         return nuevo_estado
 
