@@ -64,8 +64,8 @@ class InterfazChMaquina:
     def __init__(self, constructor):
         self.constructor = constructor
         self.maquina = None
+        self.estado = None
         self.ventana = constructor.get_object("chmaquina")
-        self.area_impresion = constructor.get_object("area-impresion")
         self.area_pantalla = constructor.get_object("area-pantalla")
         self.tabla_memoria = constructor.get_object("tabla-memoria")
         self.tabla_variables = constructor.get_object("tabla-variables")
@@ -75,6 +75,7 @@ class InterfazChMaquina:
         )
         self.preparar_tabla(self.tabla_variables, ["Programa", "Nombre", "Posición"])
         self.preparar_tabla(self.tabla_etiquetas, ["Programa", "Nombre", "Posición"])
+        self.redibujar()
 
     @staticmethod
     def preparar_tabla(tabla, titulos):
@@ -91,8 +92,8 @@ class InterfazChMaquina:
             tamano_kernel=128,
             tamano_memoria=1024,
             teclado=TecladoGtk(self.ventana),
-            impresora=ImpresoraGtk(self.area_impresion),
-            pantalla=PantallaGtk(self.area_pantalla),
+            impresora=ImpresoraGtk(self.constructor.get_object("area-impresion")),
+            pantalla=PantallaGtk(self.constructor.get_object("area-pantalla")),
         )
         self.actualizar_estado(self.maquina.encender())
         self.actualizar_estado(
@@ -113,15 +114,47 @@ class InterfazChMaquina:
     def on_siguiente_clicked(self, widget):
         self.actualizar_estado(self.maquina.paso(self.estado))
 
-    def on_continua_clicked(self, widget):
+    def on_continuo_clicked(self, widget):
         for estado in self.maquina.iterar(self.estado):
             self.actualizar_estado(estado)
+
+    def on_apagar_clicked(self, widget):
+        self.actualizar_estado(None)
+
+    def on_cargar_clicked(self, widget):
+        print("cargar archivo")
 
     def actualizar_estado(self, estado):
         self.estado = estado
         self.redibujar()
 
+    def habilitar_botones(self, activos):
+        todos = ["encender", "apagar", "cargar", "siguiente", "continuo"]
+        for boton in todos:
+            widget = self.constructor.get_object(boton)
+            widget.set_sensitive(activos.get(boton, False))
+
     def redibujar(self):
+        apagada = self.estado is None or self.maquina is None
+        nada_por_hacer = self.estado and self.estado.nada_por_hacer()
+
+        self.habilitar_botones(
+            {
+                "encender": apagada,
+                "apagar": not apagada,
+                "cargar": not apagada,
+                "siguiente": not apagada and not nada_por_hacer,
+                "continuo": not apagada and not nada_por_hacer,
+            }
+        )
+
+        if self.estado is None or self.maquina is None:
+            # maquina apagada
+            self.tabla_memoria.set_model(None)
+            self.tabla_etiquetas.set_model(None)
+            self.tabla_variables.set_model(None)
+            return
+
         store = Gtk.ListStore(str, str, str, str)
         for pos, item in enumerate(self.estado.memoria):
             if item:
@@ -136,14 +169,12 @@ class InterfazChMaquina:
         self.tabla_memoria.set_model(store)
 
         store = Gtk.ListStore(str, str, str)
-        print(self.estado.etiquetas)
         for programa, etiquetas in self.estado.etiquetas.items():
             for nombre, pos in etiquetas.items():
                 store.append([programa, nombre, f"{pos:04d}"])
         self.tabla_etiquetas.set_model(store)
 
         store = Gtk.ListStore(str, str, str)
-        print(self.estado.variables)
         for programa, variables in self.estado.variables.items():
             for nombre, pos in variables.items():
                 store.append([programa, nombre, f"{pos:04d}"])
