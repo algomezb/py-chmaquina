@@ -1,3 +1,4 @@
+import collections
 import re
 
 
@@ -9,12 +10,12 @@ class ErrorDeSintaxis(Exception):
 
 class Contexto(object):
     def __init__(self):
-        self.variables = set()
-        self.etiquetas = set()
+        self.variables = collections.OrderedDict()
+        self.etiquetas = collections.OrderedDict()
         self.etiquetas_requeridas = set()
 
-    def definir_variable(self, variable):
-        self.variables.add(variable)
+    def definir_variable(self, variable, tipo, valor):
+        self.variables[variable] = {"tipo": tipo, "valor": valor}
 
     def variable_definida(self, variable):
         return variable in self.variables
@@ -22,12 +23,12 @@ class Contexto(object):
     def requerir_etiqueta(self, etiqueta):
         return self.etiquetas_requeridas.add(etiqueta)
 
-    def definir_etiqueta(self, etiqueta):
-        return self.etiquetas.add(etiqueta)
+    def definir_etiqueta(self, etiqueta, linea):
+        self.etiquetas[etiqueta] = int(linea)
 
     @property
     def etiquetas_faltantes(self):
-        return self.etiquetas_requeridas - self.etiquetas
+        return self.etiquetas_requeridas - set(self.etiquetas.keys())
 
     def __repr__(self):
         return "\n".join(
@@ -64,6 +65,11 @@ class VerificadorCh(object):
             raise ErrorDeSintaxis(f"{cadena} no es un tipo válido")
 
     @staticmethod
+    def valor_por_defecto(tipo):
+        valores = {"C": " ", "I": "0", "R": "0.0", "L": "0"}
+        return valores.get(tipo.upper())
+
+    @staticmethod
     def es_de_tipo(tipo, valor):
         """
         Verifica si un valor es del tipo dado.
@@ -97,7 +103,6 @@ class VerificadorCh(object):
         """
         Verifica que todas las etiquetas requeridas están definidas.
         """
-        print(self.contexto)
         faltantes = self.contexto.etiquetas_faltantes
         if faltantes:
             raise ErrorDeSintaxis(f"No se han definido las etiquetas {faltantes}")
@@ -128,7 +133,9 @@ class VerificadorCh(object):
             if len(argumentos) == 3:
                 valor = argumentos[2]
                 self.es_de_tipo(tipo, valor)
-            self.contexto.definir_variable(variable)
+            else:
+                valor = self.valor_por_defecto(tipo)
+            self.contexto.definir_variable(variable, tipo, valor)
         elif instruccion == "vaya":
             # vaya <etiqueta>
             self.numero_de_argumentos(argumentos, 1)
@@ -145,7 +152,7 @@ class VerificadorCh(object):
             self.numero_de_argumentos(argumentos, 2)
             etiqueta, linea = argumentos
             self.es_de_tipo("I", linea)
-            self.contexto.definir_etiqueta(etiqueta)
+            self.contexto.definir_etiqueta(etiqueta, linea)
         elif instruccion in (
             "cargue",
             "almacene",
@@ -194,9 +201,11 @@ class VerificadorCh(object):
 
     def verificar(self):
         self.contexto = Contexto()
-        for linea in self.programa.split("\n"):
+        lineas = self.programa.strip().split("\n")
+        for linea in lineas:
             self.verificar_linea(linea)
         self.etiquetas_completas()
+        return lineas, self.contexto.variables, self.contexto.etiquetas
 
 
 def verificar(programa):
