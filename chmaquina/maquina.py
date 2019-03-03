@@ -20,8 +20,26 @@ class TecladoEnConsola(object):
     Un teclado que lee por consola.
     """
 
-    def leer(self):
+    def lea(self):
         return input()
+
+
+class ImpresoraEnConsola(object):
+    """
+    Una impresora que muestra mensajes en consola.
+    """
+
+    def imprima(self, mensaje):
+        print("[IMPRESORA]", mensaje)
+
+
+class PantallaEnConsola(object):
+    """
+    Una pantalla que muestra mensajes en consola.
+    """
+
+    def muestre(self, mensaje):
+        print("[PANTALLA]", mensaje)
 
 
 class EstadoMaquina:
@@ -51,6 +69,14 @@ class EstadoMaquina:
             return None
         dato = self.memoria[self.contador]
         return dato.get("programa"), dato.get("valor")
+
+    def nada_por_hacer(self):
+        # FIXME: Cola de procesos?
+        siguiente = self.siguiente_instruccion()
+        if siguiente is None:
+            return True
+        operacion, *_ = siguiente[1].lstrip().split()
+        return operacion == "retorne"
 
     def buscar_variable(self, programa, varialbe):
         posicion = self.variables[programa][varialbe]
@@ -92,10 +118,14 @@ class Maquina(object):
     Representa un ch computador.
     """
 
-    def __init__(self, tamano_memoria, tamano_kernel, teclado=None):
+    def __init__(
+        self, tamano_memoria, tamano_kernel, teclado=None, impresora=None, pantalla=None
+    ):
         self.tamano_memoria = tamano_memoria
         self.tamano_kernel = tamano_kernel
         self.teclado = teclado or TecladoEnConsola()
+        self.impresora = impresora or ImpresoraEnConsola()
+        self.pantalla = pantalla or PantallaEnConsola()
 
     def encender(self):
         """
@@ -131,12 +161,14 @@ class Maquina(object):
             bandera = float(nuevo_estado.acumulador(por_defecto="0"))
             if bandera > 0:
                 nuevo_estado.vaya(programa, positivo)
-            else:
+            elif bandera < 0:
                 nuevo_estado.vaya(programa, negativo)
+            else:
+                nuevo_estado.incrementar_contador()
             return nuevo_estado
         elif operacion == "lea":
             variable, = argumentos
-            valor = self.teclado.leer()
+            valor = self.teclado.lea()
             nuevo_estado.asignar_variable(programa, variable, valor)
         elif operacion in (
             "sume",
@@ -189,14 +221,27 @@ class Maquina(object):
             operando = estado.buscar_variable(programa, operando)["valor"] == "1"
             resultado = "1" if not operando else "0"
             nuevo_estado.asignar_variable(programa, salida, resultado)
-
+        elif operacion == "imprima":
+            variable, = argumentos
+            mensaje = estado.buscar_variable(programa, variable)["valor"]
+            self.impresora.imprima(mensaje)
+        elif operacion == "muestre":
+            variable, = argumentos
+            mensaje = estado.buscar_variable(programa, variable)["valor"]
+            self.pantalla.muestre(mensaje)
         nuevo_estado.incrementar_contador()
         return nuevo_estado
 
     def correr(self, estado, pasos=None):
         nuevo_estado = estado
-        for _ in range(pasos or 1):
+        if pasos is None:
+            while not nuevo_estado.nada_por_hacer():
+                nuevo_estado = self.paso(nuevo_estado)
+            return nuevo_estado
+
+        for _ in range(pasos):
             nuevo_estado = self.paso(nuevo_estado)
+
         return nuevo_estado
 
     def cargar(self, estado, programa):

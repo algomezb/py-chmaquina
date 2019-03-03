@@ -14,10 +14,30 @@ def verificar_estados_iguales(estado, otro, menos=None):
 @pytest.fixture
 def maquina():
     class TecladoFalso:
-        def leer(self):
+        def lea(self):
             return "entrada de usuario"
 
-    return Maquina(tamano_memoria=1024, tamano_kernel=128, teclado=TecladoFalso())
+    class ImpresoraFalsa:
+        def __init__(self):
+            self.contenido = []
+
+        def imprima(self, mensaje):
+            self.contenido.append(mensaje)
+
+    class PantallaFalsa:
+        def __init__(self):
+            self.contenido = []
+
+        def muestre(self, mensaje):
+            self.contenido.append(mensaje)
+
+    return Maquina(
+        tamano_memoria=1024,
+        tamano_kernel=128,
+        teclado=TecladoFalso(),
+        impresora=ImpresoraFalsa(),
+        pantalla=PantallaFalsa(),
+    )
 
 
 def test_encender(maquina):
@@ -300,5 +320,49 @@ def test_operacion_no(maquina, operando, resultado):
     estado = maquina.encender()
     programa_cargado = maquina.cargar(estado, "\n".join(instrucciones))
     nuevo = maquina.correr(programa_cargado, pasos=3)
-    # TODO: No se debe hacer esta comparación entre flotantes
     assert nuevo.buscar_variable("000", "resultado")["valor"] == resultado
+
+
+def test_imprima_valor(maquina):
+    instrucciones = [f"nueva variable C hola mundo", f"imprima variable", "retorne 0"]
+    estado = maquina.encender()
+    programa_cargado = maquina.cargar(estado, "\n".join(instrucciones))
+    maquina.correr(programa_cargado, pasos=2)
+    assert "hola mundo" in maquina.impresora.contenido
+
+
+def test_muestre_valor_en_pantalla(maquina):
+    instrucciones = [f"nueva variable C hola mundo", f"muestre variable", "retorne 0"]
+    estado = maquina.encender()
+    programa_cargado = maquina.cargar(estado, "\n".join(instrucciones))
+    maquina.correr(programa_cargado, pasos=2)
+    assert "hola mundo" in maquina.pantalla.contenido
+
+
+def test_factorial(maquina):
+    instrucciones = [
+        "nueva               unidad           I         1",
+        "nueva m I 5",
+        "nueva respuesta I 1",
+        "nueva intermedia I 0",
+        "cargue m",
+        "almacene respuesta",
+        "reste unidad",
+        "almacene intermedia",
+        "cargue respuesta",
+        "multiplique intermedia",
+        "almacene respuesta",
+        "cargue intermedia",
+        "reste unidad",
+        "vayasi itere fin",
+        "etiqueta itere 8",
+        "etiqueta fin 19",
+        "muestre respuesta",
+        "imprima respuesta",
+        "retorne 0",
+    ]
+    estado = maquina.encender()
+    programa_cargado = maquina.cargar(estado, "\n".join(instrucciones))
+    maquina.correr(programa_cargado)
+    assert '120.0' in maquina.impresora.contenido
+    assert '120.0' in maquina.pantalla.contenido
