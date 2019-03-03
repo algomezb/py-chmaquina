@@ -24,7 +24,8 @@ class Contexto(object):
         return self.etiquetas_requeridas.add(etiqueta)
 
     def definir_etiqueta(self, etiqueta, linea):
-        self.etiquetas[etiqueta] = int(linea)
+        # Restamos uno para que las etiquetas esten indexadas en 0
+        self.etiquetas[etiqueta] = int(linea) - 1
 
     @property
     def etiquetas_faltantes(self):
@@ -79,10 +80,10 @@ class VerificadorCh(object):
             # Nada que hacer todo valor puede ser tipo cadena
             pass
         elif tipo == "I":
-            if not re.match(r"^\d+$", valor):
+            if not re.match(r"^-?\d+$", valor):
                 raise ErrorDeSintaxis(f"El valor '{valor}' no es de tipo {tipo}")
         elif tipo == "R":
-            if not re.match(r"^\d+\.?\d+$", valor):
+            if not re.match(r"^-?\d+\.?\d+$", valor):
                 raise ErrorDeSintaxis(f"El valor '{valor}' no es de tipo {tipo}")
         elif tipo == "L":
             if valor not in ["0", "1"]:
