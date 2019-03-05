@@ -17,27 +17,7 @@ def maquina():
         def lea(self):
             return "entrada de usuario"
 
-    class ImpresoraFalsa:
-        def __init__(self):
-            self.contenido = []
-
-        def imprima(self, mensaje):
-            self.contenido.append(mensaje)
-
-    class PantallaFalsa:
-        def __init__(self):
-            self.contenido = []
-
-        def muestre(self, mensaje):
-            self.contenido.append(mensaje)
-
-    return Maquina(
-        tamano_memoria=1024,
-        tamano_kernel=128,
-        teclado=TecladoFalso(),
-        impresora=ImpresoraFalsa(),
-        pantalla=PantallaFalsa(),
-    )
+    return Maquina(tamano_memoria=1024, tamano_kernel=128, teclado=TecladoFalso())
 
 
 def test_encender(maquina):
@@ -327,16 +307,16 @@ def test_imprima_valor(maquina):
     instrucciones = [f"nueva variable C hola mundo", f"imprima variable", "retorne 0"]
     estado = maquina.encender()
     programa_cargado = maquina.cargar(estado, "\n".join(instrucciones))
-    maquina.correr(programa_cargado, pasos=2)
-    assert "hola mundo" in maquina.impresora.contenido
+    nuevo = maquina.correr(programa_cargado, pasos=2)
+    assert ("000", "hola mundo") in nuevo.impresora
 
 
 def test_muestre_valor_en_pantalla(maquina):
     instrucciones = [f"nueva variable C hola mundo", f"muestre variable", "retorne 0"]
     estado = maquina.encender()
     programa_cargado = maquina.cargar(estado, "\n".join(instrucciones))
-    maquina.correr(programa_cargado, pasos=2)
-    assert "hola mundo" in maquina.pantalla.contenido
+    nuevo = maquina.correr(programa_cargado, pasos=2)
+    assert ("000", "hola mundo") in nuevo.pantalla
 
 
 def test_factorial(maquina):
@@ -363,6 +343,7 @@ def test_factorial(maquina):
     ]
     estado = maquina.encender()
     programa_cargado = maquina.cargar(estado, "\n".join(instrucciones))
-    maquina.correr(programa_cargado)
-    assert '120.0' in maquina.impresora.contenido
-    assert '120.0' in maquina.pantalla.contenido
+    nuevo = maquina.correr(programa_cargado)
+    assert ("000", "120.0") in nuevo.impresora
+    assert ("000", "120.0") in nuevo.pantalla
+

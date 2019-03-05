@@ -24,30 +24,14 @@ class TecladoEnConsola(object):
         return input()
 
 
-class ImpresoraEnConsola(object):
-    """
-    Una impresora que muestra mensajes en consola.
-    """
-
-    def imprima(self, mensaje):
-        print("[IMPRESORA]", mensaje)
-
-
-class PantallaEnConsola(object):
-    """
-    Una pantalla que muestra mensajes en consola.
-    """
-
-    def muestre(self, mensaje):
-        print("[PANTALLA]", mensaje)
-
-
 class EstadoMaquina:
     def __init__(self, memoria, contador, pivote):
         self.memoria = memoria
         self.variables = {}
         self.etiquetas = {}
         self.programas = {}
+        self.pantalla = []
+        self.impresora = []
         self.contador = contador
         self.pivote = pivote
 
@@ -62,6 +46,8 @@ class EstadoMaquina:
         estado.variables = copy.deepcopy(self.variables)
         estado.etiquetas = copy.deepcopy(self.etiquetas)
         estado.programas = copy.deepcopy(self.programas)
+        estado.impresora = copy.deepcopy(self.impresora)
+        estado.pantalla = copy.deepcopy(self.pantalla)
         return estado
 
     def siguiente_instruccion(self):
@@ -118,14 +104,10 @@ class Maquina(object):
     Representa un ch computador.
     """
 
-    def __init__(
-        self, tamano_memoria, tamano_kernel, teclado=None, impresora=None, pantalla=None
-    ):
+    def __init__(self, tamano_memoria, tamano_kernel, teclado=None):
         self.tamano_memoria = tamano_memoria
         self.tamano_kernel = tamano_kernel
         self.teclado = teclado or TecladoEnConsola()
-        self.impresora = impresora or ImpresoraEnConsola()
-        self.pantalla = pantalla or PantallaEnConsola()
 
     def encender(self):
         """
@@ -224,11 +206,11 @@ class Maquina(object):
         elif operacion == "imprima":
             variable, = argumentos
             mensaje = estado.buscar_variable(programa, variable)["valor"]
-            self.impresora.imprima(mensaje)
+            nuevo_estado.impresora.append((programa, mensaje))
         elif operacion == "muestre":
             variable, = argumentos
             mensaje = estado.buscar_variable(programa, variable)["valor"]
-            self.pantalla.muestre(mensaje)
+            nuevo_estado.pantalla.append((programa, mensaje))
         nuevo_estado.incrementar_contador()
         return nuevo_estado
 

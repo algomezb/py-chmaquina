@@ -34,28 +34,6 @@ class TecladoGtk(object):
             return text
 
 
-class ImpresoraGtk:
-    def __init__(self, area_de_texto):
-        self.area_de_texto = area_de_texto
-        self.buffer = Gtk.TextBuffer()
-        self.area_de_texto.set_buffer(self.buffer)
-
-    def imprima(self, mensaje):
-        final = self.buffer.get_end_iter()
-        self.buffer.insert(final, f"{mensaje}\n")
-
-
-class PantallaGtk:
-    def __init__(self, area_de_texto):
-        self.area_de_texto = area_de_texto
-        self.buffer = Gtk.TextBuffer()
-        self.area_de_texto.set_buffer(self.buffer)
-
-    def muestre(self, mensaje):
-        final = self.buffer.get_end_iter()
-        self.buffer.insert(final, f"{mensaje}\n")
-
-
 class InterfazChMaquina:
     """
     Controlador de la interfaz gráfica del ch maquina.
@@ -89,11 +67,7 @@ class InterfazChMaquina:
 
     def on_encender_clicked(self, widget):
         self.maquina = Maquina(
-            tamano_kernel=128,
-            tamano_memoria=1024,
-            teclado=TecladoGtk(self.ventana),
-            impresora=ImpresoraGtk(self.constructor.get_object("area-impresion")),
-            pantalla=PantallaGtk(self.constructor.get_object("area-pantalla")),
+            tamano_kernel=128, tamano_memoria=1024, teclado=TecladoGtk(self.ventana)
         )
         self.actualizar_estado(self.maquina.encender())
 
@@ -180,7 +154,7 @@ class InterfazChMaquina:
             self.tabla_memoria.set_model(None)
             self.tabla_etiquetas.set_model(None)
             self.tabla_variables.set_model(None)
-            self.constructor.get_object("area-impresion").set_buffer(Gtk.TextBuffer())
+            self.constructor.get_object("area-impresora").set_buffer(Gtk.TextBuffer())
             self.constructor.get_object("area-pantalla").set_buffer(Gtk.TextBuffer())
             return
 
@@ -208,3 +182,13 @@ class InterfazChMaquina:
             for nombre, pos in variables.items():
                 store.append([programa, nombre, f"{pos:04d}"])
         self.tabla_variables.set_model(store)
+
+        for salida in ("impresora", "pantalla"):
+            buffer = Gtk.TextBuffer()
+            buffer.set_text(
+                "\n".join(
+                    f"[{programa}] {mensaje}"
+                    for programa, mensaje in getattr(self.estado, salida)
+                )
+            )
+            self.constructor.get_object(f"area-{salida}").set_buffer(buffer)
