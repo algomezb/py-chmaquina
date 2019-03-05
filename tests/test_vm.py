@@ -6,7 +6,7 @@ from chmaquina.maquina import Maquina, ChProgramaInvalido, ErrorDeEjecucion
 def verificar_estados_iguales(estado, otro, menos=None):
     if menos is None:
         menos = {}
-    campos = ["memoria", "variables", "etiquetas", "programas", "contador", "pivote"]
+    campos = ["memoria", "variables", "etiquetas", "programas", "pivote"]
     for campo in campos:
         assert menos.get(campo, getattr(estado, campo)) == getattr(otro, campo)
 
@@ -20,10 +20,35 @@ def maquina():
     return Maquina(tamano_memoria=1024, tamano_kernel=128, teclado=TecladoFalso())
 
 
+@pytest.fixture()
+def factorial():
+    instrucciones = [
+        "nueva               unidad           I         1",
+        "nueva m I 5  ",
+        "nueva respuesta I 1",
+        "nueva intermedia I 0",
+        "cargue m",
+        "almacene respuesta",
+        "reste unidad",
+        "almacene intermedia",
+        "cargue respuesta",
+        "multiplique intermedia",
+        "almacene respuesta",
+        "cargue intermedia",
+        "reste unidad",
+        "vayasi itere fin",
+        "etiqueta itere 8",
+        "etiqueta fin 19",
+        "muestre respuesta",
+        "imprima respuesta",
+        "retorne 0",
+    ]
+    return "\n".join(instrucciones)
+
+
 def test_encender(maquina):
     estado = maquina.encender()
     assert len(estado.memoria) == maquina.tamano_memoria
-    assert estado.contador == maquina.tamano_kernel + 1
     assert estado.pivote == maquina.tamano_kernel + 1
 
 
@@ -39,13 +64,14 @@ def test_cargar_programa(maquina):
     num_variables = 1
     estado = maquina.encender()
     siguiente = maquina.cargar(estado, programa)
-    assert siguiente.contador == estado.contador
+    assert siguiente.programas["000"]["contador"] == 0
     assert siguiente.pivote == estado.pivote + len(instrucciones) + num_variables
     assert siguiente.variables == {"000": {"variable": siguiente.pivote - 1}}
-    assert siguiente.etiquetas == {"000": {"fin": estado.pivote + 2}}
+    assert siguiente.etiquetas == {"000": {"fin": 2}}
     assert siguiente.programas == {
         "000": {
             "inicio": estado.pivote,
+            "contador": 0,
             "datos": estado.pivote + 3,
             "final": estado.pivote + 3 + 1,
         }
@@ -85,11 +111,13 @@ def test_cargar_dos_programas(maquina):
     assert siguiente.programas == {
         "000": {
             "inicio": estado.pivote,
+            "contador": 0,
             "datos": estado.pivote + 3,
             "final": estado.pivote + 4,
         },
         "001": {
             "inicio": estado.pivote + 4,
+            "contador": 0,
             "datos": estado.pivote + 7,
             "final": estado.pivote + 8,
         },
@@ -105,7 +133,7 @@ def test_cargar_programa_invalido(maquina):
 
 
 @pytest.mark.parametrize(
-    "linea", ["nueva variable I 1", "etiqueta fin 2", "// comentario", ""]
+    "linea", ["nueva variable I 1", "etiqueta fin 2", "// comentario"]
 )
 def test_lineas_sin_efecto(linea, maquina):
     instrucciones = [linea, "retorne 0"]
@@ -115,7 +143,9 @@ def test_lineas_sin_efecto(linea, maquina):
     verificar_estados_iguales(
         programa_cargado,
         linea_ejecutada,
-        menos={"contador": programa_cargado.contador + 1},
+        menos={
+            "programas": {"000": {**programa_cargado.programas["000"], "contador": 1}}
+        },
     )
 
 
@@ -128,7 +158,7 @@ def test_cargar_variable(maquina):
         programa_cargado,
         variable_cargada,
         menos={
-            "contador": programa_cargado.contador + 2,
+            "programas": {"000": {**programa_cargado.programas["000"], "contador": 2}},
             "memoria": [
                 {
                     "programa": "***",
@@ -196,7 +226,7 @@ def test_lea_variable(maquina):
     instrucciones = ["nueva variable C", "lea variable", "retorne 0"]
     estado = maquina.encender()
     programa_cargado = maquina.cargar(estado, "\n".join(instrucciones))
-    nuevo = maquina.correr(programa_cargado, pasos=3)
+    nuevo = maquina.correr(programa_cargado, pasos=2)
     assert nuevo.buscar_variable("000", "variable")["valor"] == "entrada de usuario"
 
 
@@ -319,31 +349,30 @@ def test_muestre_valor_en_pantalla(maquina):
     assert ("000", "hola mundo") in nuevo.pantalla
 
 
-def test_factorial(maquina):
-    instrucciones = [
-        "nueva               unidad           I         1",
-        "nueva m I 5  ",
-        "nueva respuesta I 1",
-        "nueva intermedia I 0",
-        "cargue m",
-        "almacene respuesta",
-        "reste unidad",
-        "almacene intermedia",
-        "cargue respuesta",
-        "multiplique intermedia",
-        "almacene respuesta",
-        "cargue intermedia",
-        "reste unidad",
-        "vayasi itere fin",
-        "etiqueta itere 8",
-        "etiqueta fin 19",
-        "muestre respuesta",
-        "imprima respuesta",
-        "retorne 0",
-    ]
+def test_factorial(maquina, factorial):
     estado = maquina.encender()
-    programa_cargado = maquina.cargar(estado, "\n".join(instrucciones))
+    programa_cargado = maquina.cargar(estado, factorial)
     nuevo = maquina.correr(programa_cargado)
     assert ("000", "120.0") in nuevo.impresora
     assert ("000", "120.0") in nuevo.pantalla
 
+
+def test_factoria_2_veces(maquina, factorial):
+    estado = maquina.encender()
+    estado = maquina.cargar(estado, factorial)
+    estado = maquina.cargar(estado, factorial)
+    nuevo = maquina.correr(estado)
+    assert [("000", "120.0"), ("001", "120.0")] == nuevo.impresora
+    assert [("000", "120.0"), ("001", "120.0")] == nuevo.impresora
+
+
+def test_factoria_despues_de_correr(maquina, factorial):
+    estado = maquina.encender()
+    estado = maquina.cargar(estado, factorial)
+    estado = maquina.cargar(estado, factorial)
+    estado = maquina.correr(estado)
+    estado = maquina.cargar(estado, factorial)
+    nuevo = maquina.correr(estado)
+    print(nuevo.terminados)
+    assert [("000", "120.0"), ("001", "120.0"), ("002", "120.0")] == nuevo.impresora
+    assert [("000", "120.0"), ("001", "120.0"), ("002", "120.0")] == nuevo.impresora

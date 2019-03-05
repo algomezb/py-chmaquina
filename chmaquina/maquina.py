@@ -15,6 +15,12 @@ class ErrorDeEjecucion(Exception):
     """
 
 
+class ErrorDeSegmentacion(Exception):
+    """
+    Indica que un programa trató de leer una posición de memoria que no tenía asignada.
+    """
+
+
 class TecladoEnConsola(object):
     """
     Un teclado que lee por consola.
@@ -25,44 +31,46 @@ class TecladoEnConsola(object):
 
 
 class EstadoMaquina:
-    def __init__(self, memoria, contador, pivote):
+    def __init__(self, memoria, pivote):
         self.memoria = memoria
         self.variables = {}
         self.etiquetas = {}
         self.programas = {}
         self.pantalla = []
         self.impresora = []
-        self.contador = contador
+        self.terminados = {}
         self.pivote = pivote
 
     @classmethod
     def para(cls, maquina):
         memoria = [{}] * maquina.tamano_memoria
         apuntador = maquina.tamano_kernel + 1
-        return cls(memoria, apuntador, apuntador)
+        return cls(memoria, apuntador)
 
     def copiar(self):
-        estado = self.__class__(copy.deepcopy(self.memoria), self.contador, self.pivote)
+        estado = self.__class__(copy.deepcopy(self.memoria), self.pivote)
         estado.variables = copy.deepcopy(self.variables)
         estado.etiquetas = copy.deepcopy(self.etiquetas)
         estado.programas = copy.deepcopy(self.programas)
         estado.impresora = copy.deepcopy(self.impresora)
         estado.pantalla = copy.deepcopy(self.pantalla)
+        estado.terminados = copy.deepcopy(self.terminados)
         return estado
 
     def siguiente_instruccion(self):
-        if self.memoria[self.contador].get("tipo") != "CODIGO":
+        if not self.programas:
             return None
-        dato = self.memoria[self.contador]
-        return dato.get("programa"), dato.get("valor")
+        nombre, programa = next(iter(self.programas.items()))
+        posicion = programa["inicio"] + programa["contador"]
+        dato = self.memoria[posicion]
+        if dato.get("tipo") != "CODIGO" or dato.get("programa") != nombre:
+            raise ErrorDeSegmentacion(
+                f"El programa {nombre} intentó ejecutar código fuera de su región de código."
+            )
+        return nombre, dato.get("valor")
 
     def nada_por_hacer(self):
-        # FIXME: Cola de procesos?
-        siguiente = self.siguiente_instruccion()
-        if siguiente is None:
-            return True
-        operacion, *_ = siguiente[1].lstrip().split()
-        return operacion == "retorne"
+        return not self.programas
 
     def buscar_variable(self, programa, varialbe):
         posicion = self.variables[programa][varialbe]
@@ -87,7 +95,7 @@ class EstadoMaquina:
         return self.memoria[0].get("valor", por_defecto)
 
     def vaya(self, programa, etiqueta):
-        self.contador = self.etiquetas[programa][etiqueta]
+        self.programas[programa]["contador"] = self.etiquetas[programa][etiqueta]
 
     def agregar_a_memoria(self, dato):
         posicion = self.pivote
@@ -95,8 +103,8 @@ class EstadoMaquina:
         self.pivote = self.pivote + 1
         return posicion
 
-    def incrementar_contador(self):
-        self.contador += 1
+    def incrementar_contador(self, programa):
+        self.programas[programa]["contador"] += 1
 
 
 class Maquina(object):
@@ -146,7 +154,7 @@ class Maquina(object):
             elif bandera < 0:
                 nuevo_estado.vaya(programa, negativo)
             else:
-                nuevo_estado.incrementar_contador()
+                nuevo_estado.incrementar_contador(programa)
             return nuevo_estado
         elif operacion == "lea":
             variable, = argumentos
@@ -211,7 +219,11 @@ class Maquina(object):
             variable, = argumentos
             mensaje = estado.buscar_variable(programa, variable)["valor"]
             nuevo_estado.pantalla.append((programa, mensaje))
-        nuevo_estado.incrementar_contador()
+        elif operacion == "retorne":
+            nuevo_estado.terminados[programa] = linea
+            del nuevo_estado.programas[programa]
+            return nuevo_estado
+        nuevo_estado.incrementar_contador(programa)
         return nuevo_estado
 
     def correr(self, estado, pasos=None):
@@ -236,14 +248,15 @@ class Maquina(object):
         """
         Carga un chprograma en la máquina.
         """
-        nuevo_estado = estado.copiar()
         try:
             codigo, variables, etiquetas = verificar(programa)
         except ErrorDeSintaxis as e:
             raise ChProgramaInvalido(str(e))
 
-        posicion_inicial = nuevo_estado.pivote
-        programa = f"{len(nuevo_estado.programas):03d}"
+        programa = f"{len(estado.programas) + len(estado.terminados):03d}"
+        posicion_inicial = estado.pivote
+
+        nuevo_estado = estado.copiar()
         nuevo_estado.variables[programa] = {}
         nuevo_estado.etiquetas[programa] = {}
 
@@ -267,12 +280,13 @@ class Maquina(object):
 
         # Tener en cuenta las etiquetas
         for nombre, linea in etiquetas.items():
-            nuevo_estado.etiquetas[programa][nombre] = linea + posicion_inicial
+            nuevo_estado.etiquetas[programa][nombre] = linea
 
         nuevo_estado.programas[programa] = {
-            "inicio": estado.pivote,
-            "datos": estado.pivote + len(codigo),
-            "final": estado.pivote + len(codigo) + len(variables),
+            "inicio": posicion_inicial,
+            "contador": 0,
+            "datos": posicion_inicial + len(codigo),
+            "final": posicion_inicial + len(codigo) + len(variables),
         }
 
         return nuevo_estado
