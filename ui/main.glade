@@ -8,8 +8,14 @@
     <property name="default_height">600</property>
     <property name="icon_name">computer</property>
     <signal name="destroy" handler="on_chmaquina_destroy" swapped="no"/>
-    <child>
-      <placeholder/>
+    <child type="titlebar">
+      <object class="GtkHeaderBar">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="title" translatable="yes">Ch Maquina</property>
+        <property name="subtitle" translatable="yes">Herramienta para ejecutar ch programas</property>
+        <property name="show_close_button">True</property>
+      </object>
     </child>
     <child>
       <object class="GtkBox">
