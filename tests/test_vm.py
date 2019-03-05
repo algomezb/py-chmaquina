@@ -322,7 +322,7 @@ def test_muestre_valor_en_pantalla(maquina):
 def test_factorial(maquina):
     instrucciones = [
         "nueva               unidad           I         1",
-        "nueva m I 5",
+        "nueva m I 5  ",
         "nueva respuesta I 1",
         "nueva intermedia I 0",
         "cargue m",

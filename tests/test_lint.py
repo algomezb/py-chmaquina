@@ -104,6 +104,12 @@ def test_nueva_valor_tipo_correcto(tipo, valor):
     verificar(programa)
 
 
+def test_nueva_variable_reservada():
+    programa = f"nueva acumulador C hola"
+    with pytest.raises(ErrorDeSintaxis):
+        verificar(programa)
+
+
 def test_etiqueta_argumentos_equivocados():
     programa = "etiqueta nueva hola"
     with pytest.raises(ErrorDeSintaxis):
@@ -193,3 +199,13 @@ def test_extraiga_con_cadenas():
 
 def test_extraiga_con_argumentos_correctos():
     verificar("extraiga 1")
+
+
+def test_verificar_remueve_espacios_en_codigo():
+    codigo, *_ = verificar("extraiga    1 ")
+    assert codigo[0] == "extraiga 1"
+
+
+def test_verificar_no_remueve_espacios_en_cadenas():
+    codigo, *_ = verificar("nueva  variable     C  hola que    hace  ")
+    assert codigo[0] == "nueva variable C hola que    hace  "

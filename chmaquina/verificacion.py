@@ -80,10 +80,10 @@ class VerificadorCh(object):
             # Nada que hacer todo valor puede ser tipo cadena
             pass
         elif tipo == "I":
-            if not re.match(r"^-?\d+$", valor):
+            if not re.match(r"^-?\d+ *$", valor):
                 raise ErrorDeSintaxis(f"El valor '{valor}' no es de tipo {tipo}")
         elif tipo == "R":
-            if not re.match(r"^-?\d+\.?\d*$", valor):
+            if not re.match(r"^-?\d+\.?\d* *$", valor):
                 raise ErrorDeSintaxis(f"El valor '{valor}' no es de tipo {tipo}")
         elif tipo == "L":
             if valor not in ["0", "1"]:
@@ -115,14 +115,14 @@ class VerificadorCh(object):
         - No verifica que las variables no se redefinan.
         - No verifica que las etiquetas apunten a una linea de código valida.
         """
-        linea = linea.strip()
+        linea = linea.lstrip()
         tokens = linea.split()
-        if not tokens:
+        if not tokens or linea.isspace():
             # Linea vacía
-            return
+            return linea
         if linea.startswith("//"):
             # comentario
-            return
+            return linea
         instruccion, *argumentos = tokens
         if instruccion == "nueva":
             # nueva variable C hola que hace
@@ -130,6 +130,8 @@ class VerificadorCh(object):
             instruccion, *argumentos = linea.split(maxsplit=3)
             self.numero_de_argumentos(argumentos, 2, 3)
             variable, tipo, *_ = argumentos
+            if variable == "acumulador":
+                raise ErrorDeSintaxis("acumulador es una palabra reservada.")
             self.es_tipo(tipo)
             if len(argumentos) == 3:
                 valor = argumentos[2]
@@ -198,14 +200,14 @@ class VerificadorCh(object):
                 self.es_de_tipo("I", valor)
         else:
             raise ErrorDeSintaxis(f"Instrucción desconocida: '{linea}'")
+        return " ".join([instruccion] + argumentos)
 
     def verificar(self):
         self.contexto = Contexto()
-        lineas = self.programa.strip().split("\n")
-        for linea in lineas:
-            self.verificar_linea(linea)
+        lineas = self.programa.lstrip().split("\n")
+        lineas_verificadas = [self.verificar_linea(linea) for linea in lineas]
         self.etiquetas_completas()
-        return lineas, self.contexto.variables, self.contexto.etiquetas
+        return lineas_verificadas, self.contexto.variables, self.contexto.etiquetas
 
 
 def verificar(programa):
