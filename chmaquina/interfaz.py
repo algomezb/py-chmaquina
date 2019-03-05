@@ -74,6 +74,7 @@ class InterfazChMaquina:
         )
         self.preparar_tabla(self.tabla_variables, ["Programa", "Nombre", "Posición"])
         self.preparar_tabla(self.tabla_etiquetas, ["Programa", "Nombre", "Posición"])
+        self.dialogo_preferencias = self.constructor.get_object("dialogo-preferencias")
         self.redibujar()
 
     @staticmethod
@@ -137,12 +138,24 @@ class InterfazChMaquina:
 
         dialog.destroy()
 
+    def on_preferencias_clicked(self, widget):
+        response = self.dialogo_preferencias.run()
+        print(response)
+        self.dialogo_preferencias.hide()
+
     def actualizar_estado(self, estado):
         self.estado = estado
         self.redibujar()
 
     def habilitar_botones(self, activos):
-        todos = ["encender", "apagar", "cargar", "siguiente", "continuo"]
+        todos = [
+            "encender",
+            "preferencias",
+            "apagar",
+            "cargar",
+            "siguiente",
+            "continuo",
+        ]
         for boton in todos:
             widget = self.constructor.get_object(boton)
             widget.set_sensitive(activos.get(boton, False))
@@ -154,6 +167,7 @@ class InterfazChMaquina:
         self.habilitar_botones(
             {
                 "encender": apagada,
+                "preferencias": apagada,
                 "apagar": not apagada,
                 "cargar": not apagada,
                 "siguiente": not apagada and not nada_por_hacer,
