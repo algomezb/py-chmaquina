@@ -48,7 +48,7 @@ class InterfazChMaquina:
         self.tabla_variables = constructor.get_object("tabla-variables")
         self.tabla_etiquetas = constructor.get_object("tabla-etiquetas")
         self.preparar_tabla(
-            self.tabla_memoria, ["Posición", "Programa", "Tipo", "Valor"]
+            self.tabla_memoria, ["Posición", "Programa", "Tipo", "Nombre", "Valor"]
         )
         self.preparar_tabla(self.tabla_variables, ["Programa", "Nombre", "Posición"])
         self.preparar_tabla(self.tabla_etiquetas, ["Programa", "Nombre", "Posición"])
@@ -158,7 +158,7 @@ class InterfazChMaquina:
             self.constructor.get_object("area-pantalla").set_buffer(Gtk.TextBuffer())
             return
 
-        store = Gtk.ListStore(str, str, str, str)
+        store = Gtk.ListStore(str, str, str, str, str)
         for pos, item in enumerate(self.estado.memoria):
             if item:
                 store.append(
@@ -166,6 +166,7 @@ class InterfazChMaquina:
                         f"{pos:04d}",
                         item.get("programa", ""),
                         item.get("tipo", ""),
+                        item.get("nombre", ""),
                         item.get("valor", ""),
                     ]
                 )
