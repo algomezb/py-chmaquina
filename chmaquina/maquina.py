@@ -83,16 +83,11 @@ class EstadoMaquina:
         else:
             self.memoria[posicion] = dato
 
-    def asignar_acumulador(self, dato):
-        self.memoria[0] = {
-            "programa": "***",
-            "nombre": "acumulador",
-            "tipo": "MULTIPLE",
-            "valor": dato,
-        }
+    def asignar_acumulador(self, programa, dato):
+        self.asignar_variable(programa, "acumulador", dato)
 
-    def acumulador(self, por_defecto=None):
-        return self.memoria[0].get("valor", por_defecto)
+    def acumulador(self, programa, *, por_defecto=None):
+        return self.buscar_variable(programa, "acumulador").get("valor", por_defecto)
 
     def vaya(self, programa, etiqueta):
         self.programas[programa]["contador"] = self.etiquetas[programa][etiqueta]
@@ -137,10 +132,10 @@ class Maquina(object):
         if operacion == "cargue":
             variable, = argumentos
             dato = nuevo_estado.buscar_variable(programa, variable)
-            nuevo_estado.asignar_acumulador(dato.get("valor"))
+            nuevo_estado.asignar_acumulador(programa, dato.get("valor"))
         elif operacion == "almacene":
             variable, = argumentos
-            dato = nuevo_estado.acumulador()
+            dato = nuevo_estado.acumulador(programa)
             nuevo_estado.asignar_variable(programa, variable, dato)
         elif operacion == "vaya":
             etiqueta, = argumentos
@@ -148,7 +143,7 @@ class Maquina(object):
             return nuevo_estado
         elif operacion == "vayasi":
             positivo, negativo = argumentos
-            bandera = float(nuevo_estado.acumulador(por_defecto="0"))
+            bandera = float(nuevo_estado.acumulador(programa, por_defecto="0"))
             if bandera > 0:
                 nuevo_estado.vaya(programa, positivo)
             elif bandera < 0:
@@ -169,7 +164,7 @@ class Maquina(object):
             "modulo",
         ):
             variable, = argumentos
-            acumulador = float(nuevo_estado.acumulador("0"))
+            acumulador = float(nuevo_estado.acumulador(programa, por_defecto="0"))
             variable = float(nuevo_estado.buscar_variable(programa, variable)["valor"])
             if operacion == "sume":
                 resultado = acumulador + variable
@@ -186,17 +181,17 @@ class Maquina(object):
                     resultado = acumulador % variable
             except ZeroDivisionError:
                 raise ErrorDeEjecucion("Se encontró una division por cero.")
-            nuevo_estado.asignar_acumulador(str(resultado))
+            nuevo_estado.asignar_acumulador(programa, str(resultado))
         elif operacion in ("concatene", "elimine", "extraiga"):
             operando, = argumentos
-            acumulador = nuevo_estado.acumulador(" ")
+            acumulador = nuevo_estado.acumulador(programa, por_defecto=" ")
             if operacion == "concatene":
                 resultado = acumulador + operando
             if operacion == "elimine":
                 resultado = acumulador.replace(operando, "")
             if operacion == "extraiga":
                 resultado = acumulador[: int(operando)]
-            nuevo_estado.asignar_acumulador(resultado)
+            nuevo_estado.asignar_acumulador(programa, resultado)
         elif operacion in ("Y", "O"):
             a, b, salida, = argumentos
             a = estado.buscar_variable(programa, a)["valor"] == "1"
@@ -278,6 +273,17 @@ class Maquina(object):
             )
             nuevo_estado.variables[programa][nombre] = posicion
 
+        # Agregar la variable reservada acumulador
+        posicion = nuevo_estado.agregar_a_memoria(
+            {
+                "nombre": "acumulador",
+                "programa": programa,
+                "tipo": "MULTIPLE",
+                "valor": " ",
+            }
+        )
+        nuevo_estado.variables[programa]["acumulador"] = posicion
+
         # Tener en cuenta las etiquetas
         for nombre, linea in etiquetas.items():
             nuevo_estado.etiquetas[programa][nombre] = linea
@@ -286,7 +292,7 @@ class Maquina(object):
             "inicio": posicion_inicial,
             "contador": 0,
             "datos": posicion_inicial + len(codigo),
-            "final": posicion_inicial + len(codigo) + len(variables),
+            "final": posicion_inicial + len(codigo) + len(variables) + 1,
         }
 
         return nuevo_estado

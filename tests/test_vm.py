@@ -61,19 +61,21 @@ def test_paso_sin_programa(maquina):
 def test_cargar_programa(maquina):
     instrucciones = ["nueva variable C hola que hace", "etiqueta fin 3", "retorne 0"]
     programa = "\n".join(instrucciones)
-    num_variables = 1
     estado = maquina.encender()
     siguiente = maquina.cargar(estado, programa)
     assert siguiente.programas["000"]["contador"] == 0
-    assert siguiente.pivote == estado.pivote + len(instrucciones) + num_variables
-    assert siguiente.variables == {"000": {"variable": siguiente.pivote - 1}}
+    # Una variable mas 1 acumulador
+    assert siguiente.pivote == estado.pivote + len(instrucciones) + 2
+    assert siguiente.variables == {
+        "000": {"variable": estado.pivote + 3, "acumulador": estado.pivote + 3 + 1}
+    }
     assert siguiente.etiquetas == {"000": {"fin": 2}}
     assert siguiente.programas == {
         "000": {
             "inicio": estado.pivote,
             "contador": 0,
             "datos": estado.pivote + 3,
-            "final": estado.pivote + 3 + 1,
+            "final": estado.pivote + 3 + 2,
         }
     }
     assert siguiente.memoria[estado.pivote + 0] == {
@@ -113,13 +115,13 @@ def test_cargar_dos_programas(maquina):
             "inicio": estado.pivote,
             "contador": 0,
             "datos": estado.pivote + 3,
-            "final": estado.pivote + 4,
+            "final": estado.pivote + 5,
         },
         "001": {
-            "inicio": estado.pivote + 4,
+            "inicio": estado.pivote + 5,
             "contador": 0,
-            "datos": estado.pivote + 7,
-            "final": estado.pivote + 8,
+            "datos": estado.pivote + 5 + 3,
+            "final": estado.pivote + 5 + 3 + 2,
         },
     }
 
@@ -154,22 +156,7 @@ def test_cargar_variable(maquina):
     estado = maquina.encender()
     programa_cargado = maquina.cargar(estado, "\n".join(instrucciones))
     variable_cargada = maquina.correr(programa_cargado, pasos=2)
-    verificar_estados_iguales(
-        programa_cargado,
-        variable_cargada,
-        menos={
-            "programas": {"000": {**programa_cargado.programas["000"], "contador": 2}},
-            "memoria": [
-                {
-                    "programa": "***",
-                    "tipo": "MULTIPLE",
-                    "nombre": "acumulador",
-                    "valor": "hola",
-                },
-                *programa_cargado.memoria[1:],
-            ],
-        },
-    )
+    variable_cargada.acumulador("000") == "hola"
 
 
 def test_almacenar_variable(maquina):
@@ -253,7 +240,7 @@ def test_operaciones_aritmeticas(maquina, operacion, a, b, resultado):
     programa_cargado = maquina.cargar(estado, "\n".join(instrucciones))
     nuevo = maquina.correr(programa_cargado, pasos=4)
     # TODO: No se debe hacer esta comparación entre flotantes
-    assert float(nuevo.acumulador()) == float(resultado)
+    assert float(nuevo.acumulador("000")) == float(resultado)
 
 
 @pytest.mark.parametrize(
@@ -292,7 +279,7 @@ def test_operaciones_con_cadenas(maquina, operacion, a, b, resultado):
     programa_cargado = maquina.cargar(estado, "\n".join(instrucciones))
     nuevo = maquina.correr(programa_cargado, pasos=3)
     # TODO: No se debe hacer esta comparación entre flotantes
-    assert nuevo.acumulador() == resultado
+    assert nuevo.acumulador("000") == resultado
 
 
 @pytest.mark.parametrize(
