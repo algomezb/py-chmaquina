@@ -65,6 +65,11 @@ class InterfazChMaquina:
     def on_chmaquina_destroy(self, *args):
         Gtk.main_quit()
 
+    def on_chmaquina_show(self, *args):
+        self.on_tamano_memoria_value_changed(
+            self.constructor.get_object("tamano-memoria")
+        )
+
     def on_encender_clicked(self, widget):
         self.maquina = Maquina(
             tamano_kernel=128, tamano_memoria=1024, teclado=TecladoGtk(self.ventana)
@@ -114,8 +119,20 @@ class InterfazChMaquina:
 
     def on_preferencias_clicked(self, widget):
         response = self.dialogo_preferencias.run()
-        print(response)
+        if response == Gtk.ResponseType.OK:
+            print("OK")
+            print(self.constructor.get_object("tamano-memoria").get_value())
+            print(self.constructor.get_object("tamano-kernel").get_value())
         self.dialogo_preferencias.hide()
+
+    def on_tamano_memoria_value_changed(self, ajuste_memoria):
+        # Controlemos que el tamaño del kernel no se pueda hacer mayor que el tamaño
+        # del la memoria
+        ajuste_kernel = self.constructor.get_object("tamano-kernel")
+        ajuste_kernel.set_value(
+            min(ajuste_memoria.get_value(), ajuste_kernel.get_value())
+        )
+        ajuste_kernel.set_upper(ajuste_memoria.get_value())
 
     def actualizar_estado(self, estado):
         self.estado = estado
