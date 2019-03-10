@@ -61,7 +61,8 @@ class EstadoMaquina:
         if not self.programas:
             return None
         programas = list(self.programas.items())
-        # El primero en la lista FIFO
+
+        # El primero en la lista FAFS
         nombre, programa = programas[0]
         posicion = programa["inicio"] + programa["contador"]
         dato = self.memoria[posicion]
@@ -71,6 +72,7 @@ class EstadoMaquina:
             raise ErrorDeSegmentacion(
                 f"El programa {nombre} intentó ejecutar código fuera de su región de código."
             )
+
         return nombre, dato.get("valor")
 
     def nada_por_hacer(self):

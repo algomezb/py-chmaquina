@@ -52,7 +52,11 @@ class InterfazChMaquina:
         )
         self.preparar_tabla(self.tabla_variables, ["Programa", "Nombre", "Posición"])
         self.preparar_tabla(self.tabla_etiquetas, ["Programa", "Nombre", "Posición"])
-        self.dialogo_preferencias = self.constructor.get_object("dialogo-preferencias")
+        self.preferencias = {
+            "tamano_memoria": 512,
+            "tamano_kernel": 79,
+            "algoritmo": "FAFS",
+        }
         self.redibujar()
 
     @staticmethod
@@ -72,7 +76,9 @@ class InterfazChMaquina:
 
     def on_encender_clicked(self, widget):
         self.maquina = Maquina(
-            tamano_kernel=128, tamano_memoria=1024, teclado=TecladoGtk(self.ventana)
+            tamano_kernel=self.preferencias["tamano_kernel"],
+            tamano_memoria=self.preferencias["tamano_memoria"],
+            teclado=TecladoGtk(self.ventana),
         )
         self.actualizar_estado(self.maquina.encender())
 
@@ -104,7 +110,7 @@ class InterfazChMaquina:
         dialog.add_filter(filter_text)
 
         filter_any = Gtk.FileFilter()
-        filter_any.set_name("Any files")
+        filter_any.set_name("Cualquier archivo")
         filter_any.add_pattern("*")
         dialog.add_filter(filter_any)
 
@@ -118,12 +124,17 @@ class InterfazChMaquina:
         dialog.destroy()
 
     def on_preferencias_clicked(self, widget):
-        response = self.dialogo_preferencias.run()
+        dialogo_preferencias = self.constructor.get_object("dialogo-preferencias")
+        response = dialogo_preferencias.run()
         if response == Gtk.ResponseType.OK:
-            print("OK")
-            print(self.constructor.get_object("tamano-memoria").get_value())
-            print(self.constructor.get_object("tamano-kernel").get_value())
-        self.dialogo_preferencias.hide()
+            self.preferencias["tamano_memoria"] = int(
+                self.constructor.get_object("tamano-memoria").get_value()
+            )
+            self.preferencias["tamano_kernel"] = int(
+                self.constructor.get_object("tamano-kernel").get_value()
+            )
+        self.redibujar()
+        dialogo_preferencias.hide()
 
     def on_tamano_memoria_value_changed(self, ajuste_memoria):
         # Controlemos que el tamaño del kernel no se pueda hacer mayor que el tamaño
@@ -164,6 +175,13 @@ class InterfazChMaquina:
                 "siguiente": not apagada and not nada_por_hacer,
                 "continuo": not apagada and not nada_por_hacer,
             }
+        )
+
+        self.constructor.get_object("tamano-memoria").set_value(
+            self.preferencias["tamano_memoria"]
+        )
+        self.constructor.get_object("tamano-kernel").set_value(
+            self.preferencias["tamano_kernel"]
         )
 
         if apagada:
@@ -210,3 +228,4 @@ class InterfazChMaquina:
                 )
             )
             self.constructor.get_object(f"area-{salida}").set_buffer(buffer)
+

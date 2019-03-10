@@ -11,12 +11,8 @@
     </columns>
     <data>
       <row>
-        <col id="0" translatable="yes">FIFO</col>
-        <col id="1" translatable="yes">fifo</col>
-      </row>
-      <row>
-        <col id="0" translatable="yes">LIFO</col>
-        <col id="1" translatable="yes">lifo</col>
+        <col id="0" translatable="yes">FIFS</col>
+        <col id="1" translatable="yes">FIFS</col>
       </row>
     </data>
   </object>
