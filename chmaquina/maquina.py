@@ -60,9 +60,13 @@ class EstadoMaquina:
     def siguiente_instruccion(self):
         if not self.programas:
             return None
-        nombre, programa = next(iter(self.programas.items()))
+        programas = list(self.programas.items())
+        # El primero en la lista FIFO
+        nombre, programa = programas[0]
         posicion = programa["inicio"] + programa["contador"]
         dato = self.memoria[posicion]
+
+        # Protección de memoria básica
         if dato.get("tipo") != "CODIGO" or dato.get("programa") != nombre:
             raise ErrorDeSegmentacion(
                 f"El programa {nombre} intentó ejecutar código fuera de su región de código."
