@@ -205,7 +205,12 @@ class VerificadorCh(object):
     def verificar(self):
         self.contexto = Contexto()
         lineas = self.programa.lstrip().split("\n")
-        lineas_verificadas = [self.verificar_linea(linea) for linea in lineas]
+        lineas_verificadas = []
+        for numero, linea in enumerate(lineas, start=1):
+            try:
+                lineas_verificadas.append(self.verificar_linea(linea))
+            except ErrorDeSintaxis as e:
+                raise ErrorDeSintaxis(f"{e}\nEn la linea {numero}: {linea}")
         self.etiquetas_completas()
         return lineas_verificadas, self.contexto.variables, self.contexto.etiquetas
 

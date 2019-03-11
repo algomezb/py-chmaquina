@@ -21,6 +21,12 @@ class ErrorDeSegmentacion(Exception):
     """
 
 
+class SinMemoriaSuficiente(Exception):
+    """
+    Indica que la memoria de la máquina no es suficiente para ejecutar una acción.
+    """
+
+
 class TecladoEnConsola(object):
     """
     Un teclado que lee por consola.
@@ -252,20 +258,28 @@ class Maquina(object):
         try:
             codigo, variables, etiquetas = verificar(programa)
         except ErrorDeSintaxis as e:
-            raise ChProgramaInvalido(str(e))
+            raise ChProgramaInvalido from e
 
         programa = f"{len(estado.programas) + len(estado.terminados):03d}"
         posicion_inicial = estado.pivote
+        memoria_disponible = len(estado.memoria) - posicion_inicial
+        # espacio necesario para el código, las variables y el contador
+        memoria_requerida = len(codigo) + len(variables)
+
+        if memoria_disponible < memoria_requerida:
+            raise SinMemoriaSuficiente(
+                "La máquina no cuenta con la memoria suficiente para almacenar el programa"
+            )
 
         nuevo_estado = estado.copiar()
         nuevo_estado.variables[programa] = {}
         nuevo_estado.etiquetas[programa] = {}
 
         # Escribir el código en memoria
-        for i, linea in enumerate(codigo):
+        for numero, linea in enumerate(codigo, start=1):
             nuevo_estado.agregar_a_memoria(
                 {
-                    "nombre": f"L{i + 1:03d}",
+                    "nombre": f"L{numero:03d}",
                     "programa": programa,
                     "tipo": "CODIGO",
                     "valor": linea,

@@ -1,6 +1,16 @@
 import pytest
 
-from chmaquina.maquina import Maquina, ChProgramaInvalido, ErrorDeEjecucion
+from chmaquina.maquina import (
+    Maquina,
+    ChProgramaInvalido,
+    ErrorDeEjecucion,
+    SinMemoriaSuficiente,
+)
+
+
+class TecladoFalso:
+    def lea(self):
+        return "entrada de usuario"
 
 
 def verificar_estados_iguales(estado, otro, menos=None):
@@ -13,9 +23,6 @@ def verificar_estados_iguales(estado, otro, menos=None):
 
 @pytest.fixture
 def maquina():
-    class TecladoFalso:
-        def lea(self):
-            return "entrada de usuario"
 
     return Maquina(tamano_memoria=1024, tamano_kernel=128, teclado=TecladoFalso())
 
@@ -363,3 +370,10 @@ def test_factoria_despues_de_correr(maquina, factorial):
     print(nuevo.terminados)
     assert [("000", "120.0"), ("001", "120.0"), ("002", "120.0")] == nuevo.impresora
     assert [("000", "120.0"), ("001", "120.0"), ("002", "120.0")] == nuevo.impresora
+
+
+def test_cargar_programa_sin_memoria_suficiente(factorial):
+    maquina = Maquina(10, 9, teclado=TecladoFalso())
+    estado = maquina.encender()
+    with pytest.raises(SinMemoriaSuficiente):
+        maquina.cargar(estado, factorial)
