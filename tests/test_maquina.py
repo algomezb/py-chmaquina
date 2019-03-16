@@ -384,7 +384,7 @@ def test_incremento_de_tiempo_al_correr(maquina, monkeypatch):
     estado = maquina.encender()
     estado = maquina.cargar(estado, "\n".join(programa))
     estado = maquina.correr(estado, pasos=2)
-    assert estado.reloj == 2
+    assert estado.reloj == 1
 
 
 def test_incremento_operacion_io(maquina, monkeypatch):
@@ -393,4 +393,28 @@ def test_incremento_operacion_io(maquina, monkeypatch):
     estado = maquina.encender()
     estado = maquina.cargar(estado, "\n".join(programa))
     estado = maquina.correr(estado, pasos=2)
-    assert estado.reloj == 4
+    assert estado.reloj == 3
+
+
+def test_incremento_cero_operaciones_declarativas(maquina):
+    programa = ['nueva variable I 3', 'etiqueta inicio 1']
+    estado = maquina.encender()
+    estado = maquina.cargar(estado, "\n".join(programa))
+    estado = maquina.correr(estado, pasos=2)
+    assert estado.reloj == 0
+    assert estado.programas['000']['contador'] == 2
+
+
+def test_incremento_en_saltos(maquina):
+    programa = ['etiqueta fin 3', 'vaya fin']
+    estado = maquina.encender()
+    estado = maquina.cargar(estado, "\n".join(programa))
+    estado = maquina.correr(estado, pasos=2)
+    assert estado.reloj == 1
+    assert estado.programas['000']['contador'] == 2
+
+
+def test_correr_sin_programa_disponible_avanza_tiempo(maquina):
+    estado = maquina.encender()
+    estado = maquina.correr(estado, pasos=2)
+    assert estado.reloj == 2

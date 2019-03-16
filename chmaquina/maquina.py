@@ -145,7 +145,7 @@ class Maquina(object):
         """
         instruccion = estado.siguiente_instruccion()
         if instruccion == None:
-            return estado
+            return estado.avanzar_tiempo(1)
         programa, linea = instruccion
         linea = linea.strip()
         nuevo_estado = estado.copiar()
@@ -161,7 +161,7 @@ class Maquina(object):
         elif operacion == "vaya":
             etiqueta, = argumentos
             nuevo_estado.vaya(programa, etiqueta)
-            return nuevo_estado
+            return nuevo_estado.avanzar_tiempo(1)
         elif operacion == "vayasi":
             positivo, negativo = argumentos
             bandera = float(nuevo_estado.acumulador(programa, por_defecto="0"))
@@ -171,7 +171,7 @@ class Maquina(object):
                 nuevo_estado.vaya(programa, negativo)
             else:
                 nuevo_estado.incrementar_contador(programa)
-            return nuevo_estado
+            return nuevo_estado.avanzar_tiempo(1)
         elif operacion == "lea":
             variable, = argumentos
             valor = self.teclado.lea()
@@ -239,8 +239,11 @@ class Maquina(object):
             nuevo_estado.terminados[programa] = linea
             del nuevo_estado.programas[programa]
             return nuevo_estado
-        operacion_io = operacion in ("lea", "imprima", "muestre", "almacene", "cargue")
-        duracion = random.randint(1, 9) if operacion_io else 1
+        duracion = 1
+        if operacion in ("lea", "imprima", "muestre", "almacene", "cargue"):
+            duracion = random.randint(1, 9)
+        elif operacion in ("nueva", "etiqueta"):
+            duracion = 0
         return nuevo_estado.incrementar_contador(programa).avanzar_tiempo(duracion)
 
     def correr(self, estado, pasos=None):
