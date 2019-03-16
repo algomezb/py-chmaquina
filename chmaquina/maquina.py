@@ -1,7 +1,8 @@
 import copy
+import math
 import random
 
-from chmaquina.verificacion import verificar, ErrorDeSintaxis
+from chmaquina.verificacion import ErrorDeSintaxis, verificar
 
 
 class ChProgramaInvalido(Exception):
@@ -47,6 +48,7 @@ class EstadoMaquina:
         self.impresora = []
         self.terminados = {}
         self.pivote = pivote
+        self.tiempo_llegada = 0
         self.reloj = 0
 
     @classmethod
@@ -63,6 +65,7 @@ class EstadoMaquina:
         estado.impresora = copy.deepcopy(self.impresora)
         estado.pantalla = copy.deepcopy(self.pantalla)
         estado.terminados = copy.deepcopy(self.terminados)
+        estado.tiempo_llegada = self.tiempo_llegada
         estado.reloj = self.reloj
         return estado
 
@@ -120,6 +123,8 @@ class EstadoMaquina:
 
     def avanzar_tiempo(self, tiempo):
         self.reloj += tiempo
+        if self.reloj > self.tiempo_llegada:
+            self.tiempo_llegada = self.reloj
         return self
 
 
@@ -326,6 +331,9 @@ class Maquina(object):
             "contador": 0,
             "datos": posicion_inicial + len(codigo),
             "final": posicion_inicial + len(codigo) + len(variables) + 1,
+            "tiempo_llegada": estado.tiempo_llegada,
         }
+
+        nuevo_estado.tiempo_llegada += math.ceil(len(codigo) / 4)
 
         return nuevo_estado

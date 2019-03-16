@@ -83,6 +83,7 @@ def test_cargar_programa(maquina):
             "contador": 0,
             "datos": estado.pivote + 3,
             "final": estado.pivote + 3 + 2,
+            "tiempo_llegada": 0,
         }
     }
     assert siguiente.memoria[estado.pivote + 0] == {
@@ -123,12 +124,14 @@ def test_cargar_dos_programas(maquina):
             "contador": 0,
             "datos": estado.pivote + 3,
             "final": estado.pivote + 5,
+            "tiempo_llegada": 0,
         },
         "001": {
             "inicio": estado.pivote + 5,
             "contador": 0,
             "datos": estado.pivote + 5 + 3,
             "final": estado.pivote + 5 + 3 + 2,
+            "tiempo_llegada": 1,
         },
     }
 
@@ -397,24 +400,59 @@ def test_incremento_operacion_io(maquina, monkeypatch):
 
 
 def test_incremento_cero_operaciones_declarativas(maquina):
-    programa = ['nueva variable I 3', 'etiqueta inicio 1']
+    programa = ["nueva variable I 3", "etiqueta inicio 1"]
     estado = maquina.encender()
     estado = maquina.cargar(estado, "\n".join(programa))
     estado = maquina.correr(estado, pasos=2)
     assert estado.reloj == 0
-    assert estado.programas['000']['contador'] == 2
+    assert estado.programas["000"]["contador"] == 2
 
 
 def test_incremento_en_saltos(maquina):
-    programa = ['etiqueta fin 3', 'vaya fin']
+    programa = ["etiqueta fin 3", "vaya fin"]
     estado = maquina.encender()
     estado = maquina.cargar(estado, "\n".join(programa))
     estado = maquina.correr(estado, pasos=2)
     assert estado.reloj == 1
-    assert estado.programas['000']['contador'] == 2
+    assert estado.programas["000"]["contador"] == 2
 
 
 def test_correr_sin_programa_disponible_avanza_tiempo(maquina):
     estado = maquina.encender()
     estado = maquina.correr(estado, pasos=2)
     assert estado.reloj == 2
+
+
+def test_cargar_programa_con_tiempo_de_llegada(maquina):
+    programa = "\n".join(["nueva variable C"] * 4)
+    estado = maquina.encender()
+    estado = maquina.cargar(estado, programa)
+    estado = maquina.cargar(estado, programa)
+    estado = maquina.cargar(estado, programa)
+    assert estado.programas["000"]["tiempo_llegada"] == 0
+    assert estado.programas["001"]["tiempo_llegada"] == 1
+    assert estado.programas["002"]["tiempo_llegada"] == 2
+
+
+def test_cargar_programa_con_tiempo_de_llegada_no_multiplo_de_4(maquina):
+    programa = "\n".join(["nueva variable C"] * 5)
+    estado = maquina.encender()
+    estado = maquina.cargar(estado, programa)
+    estado = maquina.cargar(estado, programa)
+    assert estado.programas["000"]["tiempo_llegada"] == 0
+    assert estado.programas["001"]["tiempo_llegada"] == 2
+
+
+def test_cargar_programa_despues_de_corrida(maquina):
+    programa = "\n".join(
+        ["nueva var I", "sume var", "sume var", "sume var", "retorne 0"]
+    )
+    estado = maquina.encender()
+    estado = maquina.cargar(estado, programa)
+    assert estado.programas["000"]["tiempo_llegada"] == 0
+    estado = maquina.correr(estado)
+    assert estado.reloj == 3
+    estado = maquina.cargar(estado, programa)
+    assert estado.programas["001"]["tiempo_llegada"] == 3
+    estado = maquina.cargar(estado, programa)
+    assert estado.programas["002"]["tiempo_llegada"] == 5
