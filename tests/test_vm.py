@@ -377,3 +377,20 @@ def test_cargar_programa_sin_memoria_suficiente(factorial):
     estado = maquina.encender()
     with pytest.raises(SinMemoriaSuficiente):
         maquina.cargar(estado, factorial)
+
+
+def test_incremento_de_tiempo_al_correr(maquina, monkeypatch):
+    programa = ["nueva variable I 3", "multiplique variable"]
+    estado = maquina.encender()
+    estado = maquina.cargar(estado, "\n".join(programa))
+    estado = maquina.correr(estado, pasos=2)
+    assert estado.reloj == 2
+
+
+def test_incremento_operacion_io(maquina, monkeypatch):
+    monkeypatch.setattr("random.randint", lambda x, y: 3)
+    programa = ["nueva variable I 3", "lea variable"]
+    estado = maquina.encender()
+    estado = maquina.cargar(estado, "\n".join(programa))
+    estado = maquina.correr(estado, pasos=2)
+    assert estado.reloj == 4

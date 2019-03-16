@@ -1,4 +1,5 @@
 import copy
+import random
 
 from chmaquina.verificacion import verificar, ErrorDeSintaxis
 
@@ -46,6 +47,7 @@ class EstadoMaquina:
         self.impresora = []
         self.terminados = {}
         self.pivote = pivote
+        self.reloj = 0
 
     @classmethod
     def para(cls, maquina):
@@ -61,6 +63,7 @@ class EstadoMaquina:
         estado.impresora = copy.deepcopy(self.impresora)
         estado.pantalla = copy.deepcopy(self.pantalla)
         estado.terminados = copy.deepcopy(self.terminados)
+        estado.reloj = self.reloj
         return estado
 
     def siguiente_instruccion(self):
@@ -99,7 +102,8 @@ class EstadoMaquina:
         self.asignar_variable(programa, "acumulador", dato)
 
     def acumulador(self, programa, *, por_defecto=None):
-        return self.buscar_variable(programa, "acumulador").get("valor", por_defecto)
+        valor = self.buscar_variable(programa, "acumulador").get("valor")
+        return valor if valor else por_defecto
 
     def vaya(self, programa, etiqueta):
         self.programas[programa]["contador"] = self.etiquetas[programa][etiqueta]
@@ -112,6 +116,11 @@ class EstadoMaquina:
 
     def incrementar_contador(self, programa):
         self.programas[programa]["contador"] += 1
+        return self
+
+    def avanzar_tiempo(self, tiempo):
+        self.reloj += tiempo
+        return self
 
 
 class Maquina(object):
@@ -230,8 +239,9 @@ class Maquina(object):
             nuevo_estado.terminados[programa] = linea
             del nuevo_estado.programas[programa]
             return nuevo_estado
-        nuevo_estado.incrementar_contador(programa)
-        return nuevo_estado
+        operacion_io = operacion in ("lea", "imprima", "muestre", "almacene", "cargue")
+        duracion = random.randint(1, 9) if operacion_io else 1
+        return nuevo_estado.incrementar_contador(programa).avanzar_tiempo(duracion)
 
     def correr(self, estado, pasos=None):
         nuevo_estado = estado.copiar()
@@ -299,7 +309,7 @@ class Maquina(object):
                 "nombre": "acumulador",
                 "programa": programa,
                 "tipo": "MULTIPLE",
-                "valor": " ",
+                "valor": "",
             }
         )
         nuevo_estado.variables[programa]["acumulador"] = posicion
