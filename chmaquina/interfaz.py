@@ -47,11 +47,16 @@ class InterfazChMaquina:
         self.tabla_memoria = constructor.get_object("tabla-memoria")
         self.tabla_variables = constructor.get_object("tabla-variables")
         self.tabla_etiquetas = constructor.get_object("tabla-etiquetas")
+        self.tabla_programas = constructor.get_object("tabla-programas")
         self.preparar_tabla(
             self.tabla_memoria, ["Posición", "Programa", "Tipo", "Nombre", "Valor"]
         )
         self.preparar_tabla(self.tabla_variables, ["Programa", "Nombre", "Posición"])
         self.preparar_tabla(self.tabla_etiquetas, ["Programa", "Nombre", "Posición"])
+        self.preparar_tabla(
+            self.tabla_programas,
+            ["Programa", "Llegada", "Inicio", "Datos", "Fin", "Contador"],
+        )
         self.preferencias = {
             "tamano_memoria": 512,
             "tamano_kernel": 79,
@@ -189,16 +194,42 @@ class InterfazChMaquina:
             self.tabla_memoria.set_model(None)
             self.tabla_etiquetas.set_model(None)
             self.tabla_variables.set_model(None)
+            self.tabla_programas.set_model(None)
             self.constructor.get_object("area-impresora").set_buffer(Gtk.TextBuffer())
             self.constructor.get_object("area-pantalla").set_buffer(Gtk.TextBuffer())
+            for label in (
+                "programa",
+                "posicion",
+                "contador",
+                "tiempo",
+                "instruccion",
+                "acumulador",
+            ):
+                self.constructor.get_object(f"label-{label}").set_text("")
             return
+
+        instruccion = self.estado.siguiente_instruccion()
+        if instruccion is not None:
+            programa, codigo = instruccion
+            datos_programa = self.estado.programas[programa]
+            posicion = datos_programa["inicio"] + datos_programa["contador"]
+            self.constructor.get_object("label-programa").set_text(programa)
+            self.constructor.get_object("label-tiempo").set_text(str(self.estado.reloj))
+            self.constructor.get_object("label-posicion").set_text(f"{posicion:06d}")
+            self.constructor.get_object("label-contador").set_text(
+                str(datos_programa["contador"])
+            )
+            self.constructor.get_object("label-instruccion").set_text(codigo)
+            self.constructor.get_object("label-acumulador").set_text(
+                self.estado.buscar_variable(programa, "acumulador").get("valor", "")
+            )
 
         store = Gtk.ListStore(str, str, str, str, str)
         for pos, item in enumerate(self.estado.memoria):
             if item:
                 store.append(
                     [
-                        f"{pos:04d}",
+                        f"{pos:06d}",
                         item.get("programa", ""),
                         item.get("tipo", ""),
                         item.get("nombre", ""),
@@ -210,14 +241,29 @@ class InterfazChMaquina:
         store = Gtk.ListStore(str, str, str)
         for programa, etiquetas in self.estado.etiquetas.items():
             for nombre, pos in etiquetas.items():
-                store.append([programa, nombre, f"{pos:04d}"])
+                store.append([programa, nombre, f"{pos:06d}"])
         self.tabla_etiquetas.set_model(store)
 
         store = Gtk.ListStore(str, str, str)
         for programa, variables in self.estado.variables.items():
             for nombre, pos in variables.items():
-                store.append([programa, nombre, f"{pos:04d}"])
+                store.append([programa, nombre, f"{pos:06d}"])
         self.tabla_variables.set_model(store)
+
+        # ["Programa", "Llegada", "Inicio", "Datos", "Fin", "Contador"],
+        store = Gtk.ListStore(str, str, str, str, str, str)
+        for nombre, datos in self.estado.programas.items():
+            store.append(
+                [
+                    nombre,
+                    str(datos["tiempo_llegada"]),
+                    f"{datos['inicio']:06d}",
+                    f"{datos['datos']:06d}",
+                    f"{datos['final']:06d}",
+                    str(datos["contador"]),
+                ]
+            )
+        self.tabla_programas.set_model(store)
 
         for salida in ("impresora", "pantalla"):
             buffer = Gtk.TextBuffer()
