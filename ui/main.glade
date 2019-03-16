@@ -11,8 +11,16 @@
     </columns>
     <data>
       <row>
-        <col id="0" translatable="yes">FIFS</col>
+        <col id="0" translatable="yes">First come first served</col>
         <col id="1" translatable="yes">FIFS</col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">Shortest job first</col>
+        <col id="1" translatable="yes">SJF</col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">Round robin</col>
+        <col id="1" translatable="yes">RR</col>
       </row>
     </data>
   </object>
@@ -622,6 +630,10 @@
     <child internal-child="vbox">
       <object class="GtkBox">
         <property name="can_focus">False</property>
+        <property name="margin_left">10</property>
+        <property name="margin_right">10</property>
+        <property name="margin_top">10</property>
+        <property name="margin_bottom">10</property>
         <property name="orientation">vertical</property>
         <property name="spacing">2</property>
         <child internal-child="action_area">
@@ -746,6 +758,30 @@
               <packing>
                 <property name="left_attach">1</property>
                 <property name="top_attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="halign">start</property>
+                <property name="label" translatable="yes">Expropiativo</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkSwitch">
+                <property name="visible">True</property>
+                <property name="sensitive">False</property>
+                <property name="can_focus">True</property>
+                <property name="halign">start</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">3</property>
               </packing>
             </child>
           </object>
