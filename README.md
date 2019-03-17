@@ -24,7 +24,7 @@ Descargar el código del py-chmaquina, luego en una terminal:
 ```
 cd py-chmaquina
 python -m venv venv
-source /venv/bin/activate
+source ./venv/bin/activate
 pip install -e .
 ```
 
