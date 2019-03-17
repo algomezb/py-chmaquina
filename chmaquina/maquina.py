@@ -1,6 +1,7 @@
 import copy
 import math
 import random
+import sys
 
 from chmaquina.verificacion import ErrorDeSintaxis, verificar
 
@@ -133,10 +134,11 @@ class Maquina(object):
     Representa un ch computador.
     """
 
-    def __init__(self, tamano_memoria, tamano_kernel, teclado=None):
+    def __init__(self, tamano_memoria, tamano_kernel, teclado=None, quantum=None):
         self.tamano_memoria = tamano_memoria
         self.tamano_kernel = tamano_kernel
         self.teclado = teclado or TecladoEnConsola()
+        self.quantum = quantum or sys.maxsize
 
     def encender(self):
         """
@@ -253,20 +255,22 @@ class Maquina(object):
 
     def correr(self, estado, pasos=None):
         nuevo_estado = estado.copiar()
-        if pasos is None:
-            while not nuevo_estado.nada_por_hacer():
-                nuevo_estado = self.paso(nuevo_estado)
+        if pasos is not None:
+            for _, nuevo_estado in zip(range(pasos), self.iterar(estado)):
+                pass
             return nuevo_estado
-
-        for _ in range(pasos):
-            nuevo_estado = self.paso(nuevo_estado)
-
+        for nuevo_estado in self.iterar(estado):
+            pass
         return nuevo_estado
 
     def iterar(self, estado):
         nuevo_estado = estado.copiar()
         while not nuevo_estado.nada_por_hacer():
-            nuevo_estado = self.paso(nuevo_estado)
+            temporal = self.paso(nuevo_estado)
+            transcurrido = temporal.reloj - estado.reloj
+            if transcurrido >= self.quantum:
+                return
+            nuevo_estado = temporal
             yield nuevo_estado
 
     def cargar(self, estado, programa):

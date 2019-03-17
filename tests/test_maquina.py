@@ -416,12 +416,6 @@ def test_incremento_en_saltos(maquina):
     assert estado.programas["000"]["contador"] == 2
 
 
-def test_correr_sin_programa_disponible_avanza_tiempo(maquina):
-    estado = maquina.encender()
-    estado = maquina.correr(estado, pasos=2)
-    assert estado.reloj == 2
-
-
 def test_cargar_programa_con_tiempo_de_llegada(maquina):
     programa = "\n".join(["nueva variable C"] * 4)
     estado = maquina.encender()
@@ -455,3 +449,18 @@ def test_cargar_programa_despues_de_corrida(maquina):
     assert estado.programas["001"]["tiempo_llegada"] == 3
     estado = maquina.cargar(estado, programa)
     assert estado.programas["002"]["tiempo_llegada"] == 5
+
+
+def test_correr_programa_por_tiempo_menor_al_tiempo_de_ejecución(maquina):
+    maquina.quantum = 1
+    programa = "\n".join(
+        ["nueva var I", "sume var", "sume var", "sume var", "retorne 0"]
+    )
+    estado = maquina.encender()
+    estado = maquina.cargar(estado, programa)
+    estado = maquina.cargar(estado, programa)
+    nuevo_estado = maquina.correr(estado)
+    assert len(nuevo_estado.programas) == 2
+    assert nuevo_estado.siguiente_instruccion()[0] == "000"
+    assert nuevo_estado.programas["000"]["contador"] == 1
+
