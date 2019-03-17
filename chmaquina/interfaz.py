@@ -275,3 +275,17 @@ class InterfazChMaquina:
             )
             self.constructor.get_object(f"area-{salida}").set_buffer(buffer)
 
+
+def main():
+    constructor = Gtk.Builder()
+    constructor.add_from_file("./ui/main.glade")
+    constructor.connect_signals(InterfazChMaquina(constructor))
+
+    window = constructor.get_object("chmaquina")
+    window.show_all()
+
+    Gtk.main()
+
+
+if __name__ == "__main__":
+    main()

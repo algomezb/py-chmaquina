@@ -370,7 +370,6 @@ def test_factoria_despues_de_correr(maquina, factorial):
     estado = maquina.correr(estado)
     estado = maquina.cargar(estado, factorial)
     nuevo = maquina.correr(estado)
-    print(nuevo.terminados)
     assert [("000", "120.0"), ("001", "120.0"), ("002", "120.0")] == nuevo.impresora
     assert [("000", "120.0"), ("001", "120.0"), ("002", "120.0")] == nuevo.impresora
 

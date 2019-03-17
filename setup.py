@@ -26,7 +26,7 @@ setup(
         "Programming Language :: Python :: 3.7",
     ],
     description="Una máquina virtual para el lenguaje CH.",
-    entry_points={"console_scripts": ["chmaquina=chmaquina.cli:main"]},
+    entry_points={"console_scripts": ["chmaquina=chmaquina.interfaz:main"]},
     install_requires=requirements,
     license="MIT license",
     long_description=readme,
