@@ -84,6 +84,7 @@ def test_cargar_programa(maquina):
             "datos": estado.pivote + 3,
             "final": estado.pivote + 3 + 2,
             "tiempo_llegada": 0,
+            "tiempo_rafaga": 1,
         }
     }
     assert siguiente.memoria[estado.pivote + 0] == {
@@ -125,6 +126,7 @@ def test_cargar_dos_programas(maquina):
             "datos": estado.pivote + 3,
             "final": estado.pivote + 5,
             "tiempo_llegada": 0,
+            "tiempo_rafaga": 1,
         },
         "001": {
             "inicio": estado.pivote + 5,
@@ -132,6 +134,7 @@ def test_cargar_dos_programas(maquina):
             "datos": estado.pivote + 5 + 3,
             "final": estado.pivote + 5 + 3 + 2,
             "tiempo_llegada": 1,
+            "tiempo_rafaga": 1,
         },
     }
 
@@ -463,4 +466,13 @@ def test_correr_programa_por_tiempo_menor_al_tiempo_de_ejecución(maquina):
     assert len(nuevo_estado.programas) == 2
     assert nuevo_estado.siguiente_instruccion()[0] == "000"
     assert nuevo_estado.programas["000"]["contador"] == 1
+
+
+def test_tiempo_de_rafaga_del_programa(maquina):
+    programa = "\n".join(
+        ["nueva var I", "sume var", "sume var", "sume var", "retorne 0"]
+    )
+    estado = maquina.encender()
+    estado = maquina.cargar(estado, programa)
+    assert estado.programas['000']['tiempo_rafaga'] == 4
 

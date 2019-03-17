@@ -221,3 +221,31 @@ def verificar(programa):
     """
     verificador = VerificadorCh(programa)
     return verificador.verificar()
+
+
+def estimar(lineas):
+    """
+    Estima la duración de un ch programa.
+    """
+    rafagas_io = 0
+    rafagas_cpu = 0
+    for linea in lineas:
+        linea = linea.lstrip()
+        tokens = linea.split()
+        if not tokens or linea.isspace():
+            # Linea vacía
+            continue
+        if linea.startswith("//"):
+            # comentario
+            continue
+        instruccion = tokens[0]
+        if instruccion in "carge almacene lea muestre imprima".split():
+            rafagas_io += 1
+        elif instruccion in "nueva etiqueta".split():
+            # instrucción declarativa
+            continue
+        else:
+            # instrucción de cpu
+            rafagas_cpu += 1
+    return rafagas_cpu + 4 * rafagas_io
+

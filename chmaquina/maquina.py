@@ -3,7 +3,7 @@ import math
 import random
 import sys
 
-from chmaquina.verificacion import ErrorDeSintaxis, verificar
+from chmaquina.sintaxis import ErrorDeSintaxis, verificar, estimar
 
 
 class ChProgramaInvalido(Exception):
@@ -336,6 +336,7 @@ class Maquina(object):
             "datos": posicion_inicial + len(codigo),
             "final": posicion_inicial + len(codigo) + len(variables) + 1,
             "tiempo_llegada": estado.tiempo_llegada,
+            "tiempo_rafaga": estimar(codigo),
         }
 
         nuevo_estado.tiempo_llegada += math.ceil(len(codigo) / 4)

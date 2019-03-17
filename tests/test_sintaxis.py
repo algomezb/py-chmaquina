@@ -1,6 +1,6 @@
 import pytest
 
-from chmaquina.verificacion import verificar, ErrorDeSintaxis
+from chmaquina.sintaxis import verificar, ErrorDeSintaxis
 
 
 @pytest.fixture
