@@ -26,6 +26,7 @@ class EstadoMaquina:
         return cls(memoria, apuntador)
 
     def copiar(self):
+        """crea una copia del estado de la maquina"""
         estado = self.__class__(copy.deepcopy(self.memoria), self.pivote)
         estado.variables = copy.deepcopy(self.variables)
         estado.etiquetas = copy.deepcopy(self.etiquetas)
@@ -42,6 +43,7 @@ class EstadoMaquina:
         return estado
 
     def siguiente_instruccion(self):
+        """De acuerdo al esto actual de la maquina cual es la sig instrucción"""
         if not self.listos:
             return None
 
