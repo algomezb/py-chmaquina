@@ -1,11 +1,7 @@
 import collections
 import re
 
-
-class ErrorDeSintaxis(Exception):
-    """
-    Indica un error de sintaxis en el programa.
-    """
+from chmaquina.errores import ErrorDeSintaxis
 
 
 class Contexto(object):

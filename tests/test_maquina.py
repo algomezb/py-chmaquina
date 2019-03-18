@@ -23,7 +23,6 @@ def verificar_estados_iguales(estado, otro, menos=None):
 
 @pytest.fixture
 def maquina():
-
     return Maquina(tamano_memoria=1024, tamano_kernel=128, teclado=TecladoFalso())
 
 
@@ -366,7 +365,7 @@ def test_factoria_2_veces(maquina, factorial):
     assert [("000", "120.0"), ("001", "120.0")] == nuevo.impresora
 
 
-def test_factoria_despues_de_correr(maquina, factorial):
+def test_factorial_despues_de_correr(maquina, factorial):
     estado = maquina.encender()
     estado = maquina.cargar(estado, factorial)
     estado = maquina.cargar(estado, factorial)
@@ -454,20 +453,6 @@ def test_cargar_programa_despues_de_corrida(maquina):
     assert estado.programas["002"]["tiempo_llegada"] == 5
 
 
-def test_correr_programa_por_tiempo_menor_al_tiempo_de_ejecución(maquina):
-    maquina.quantum = 1
-    programa = "\n".join(
-        ["nueva var I", "sume var", "sume var", "sume var", "retorne 0"]
-    )
-    estado = maquina.encender()
-    estado = maquina.cargar(estado, programa)
-    estado = maquina.cargar(estado, programa)
-    nuevo_estado = maquina.correr(estado)
-    assert len(nuevo_estado.programas) == 2
-    assert nuevo_estado.siguiente_instruccion()[0] == "000"
-    assert nuevo_estado.programas["000"]["contador"] == 1
-
-
 def test_tiempo_de_rafaga_del_programa(maquina):
     programa = "\n".join(
         ["nueva var I", "sume var", "sume var", "sume var", "retorne 0"]
@@ -476,3 +461,93 @@ def test_tiempo_de_rafaga_del_programa(maquina):
     estado = maquina.cargar(estado, programa)
     assert estado.programas['000']['tiempo_rafaga'] == 4
 
+
+@pytest.mark.parametrize('algoritmo', ['RR', 'FCFS', 'SJF'])
+def test_planeacion_con_solo_un_programa(algoritmo):
+    maquina = Maquina(tamano_memoria=1024, tamano_kernel=128, teclado=TecladoFalso(), algoritmo=algoritmo)
+    programa = "\n".join(
+        ["nueva var I", "sume var", "sume var", "retorne 0"]
+    )
+    estado = maquina.encender()
+    estado = maquina.cargar(estado, programa)
+    assert estado.listos == ['000']
+
+
+@pytest.mark.parametrize('algoritmo', ['RR', 'FCFS', 'SJF'])
+def test_planeacion_con_varios_programas_uno_disponible(algoritmo):
+    maquina = Maquina(tamano_memoria=1024, tamano_kernel=128, teclado=TecladoFalso(), algoritmo=algoritmo)
+    programa = "\n".join(
+        ["nueva var I", "sume var", "sume var", "retorne 0"]
+    )
+    estado = maquina.encender()
+    estado = maquina.cargar(estado, programa)
+    estado = maquina.cargar(estado, programa)
+    print(estado.programas, estado.reloj)
+    assert estado.listos == ['000']
+
+
+def test_algoritmo_round_robin():
+    maquina = Maquina(tamano_memoria=1024, tamano_kernel=128, teclado=TecladoFalso(), algoritmo='RR')
+    programa = "\n".join(
+        ["nueva var I", "sume var", "sume var", "retorne 0"]
+    )
+    estado = maquina.encender()
+    estado = maquina.cargar(estado, programa)
+    estado = maquina.cargar(estado, programa)
+    estado = maquina.cargar(estado, programa)
+    estado.reloj = 3
+    estado = maquina.planear(estado)
+    assert estado.listos == ['002', '000', '001']
+    estado = maquina.planear(estado)
+    assert estado.listos == ['001', '002', '000']
+
+
+def test_algoritmo_fcfs():
+    maquina = Maquina(tamano_memoria=1024, tamano_kernel=128, teclado=TecladoFalso(), algoritmo='FCFS')
+    programa = "\n".join(
+        ["nueva var I", "sume var", "sume var", "retorne 0"]
+    )
+    estado = maquina.encender()
+    estado = maquina.cargar(estado, programa)
+    estado = maquina.cargar(estado, programa)
+    estado = maquina.cargar(estado, programa)
+    estado.reloj = 3
+    estado = maquina.planear(estado)
+    assert estado.listos == ['000', '001', '002']
+    estado = maquina.planear(estado)
+    assert estado.listos == ['000', '001', '002']
+
+
+def test_algoritmo_sjf():
+    maquina = Maquina(tamano_memoria=1024, tamano_kernel=128, teclado=TecladoFalso(), algoritmo='SJF')
+    programa = "\n".join(
+        ["nueva var I", "sume var", "sume var", "retorne 0"]
+    )
+    programa_corto = "\n".join(
+        ["nueva var I", "sume var", "retorne 0"]
+    )
+    estado = maquina.encender()
+    estado = maquina.cargar(estado, programa)
+    estado = maquina.cargar(estado, programa)
+    estado = maquina.cargar(estado, programa_corto)
+    estado.reloj = 3
+    estado = maquina.planear(estado)
+    assert estado.listos == ['002', '000', '001']
+
+def test_correr_obedece_al_algoritmo():
+    maquina = Maquina(tamano_memoria=1024, tamano_kernel=128, teclado=TecladoFalso(), algoritmo='SJF')
+    programa = "\n".join(
+        ["nueva var I", "sume var", "sume var", "retorne 0"]
+    )
+    programa_corto = "\n".join(
+        ["nueva var I", "sume var", "retorne 0"]
+    )
+    estado = maquina.encender()
+    estado = maquina.cargar(estado, programa)
+    estado = maquina.cargar(estado, programa)
+    estado = maquina.cargar(estado, programa_corto)
+    estado.reloj = 3
+    estado = maquina.planear(estado)
+    estado = maquina.correr(estado, pasos=2)
+    assert estado.reloj == 4
+    assert estado.programas['002']['contador'] == 2
