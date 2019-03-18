@@ -150,6 +150,11 @@ class InterfazChMaquina:
         )
         ajuste_kernel.set_upper(ajuste_memoria.get_value())
 
+    def on_toggle_expropiativo_state_set(self, boton, estado):
+        # Controlemos que el tamaño del kernel no se pueda hacer mayor que el tamaño
+        # del la memoria
+        self.constructor.get_object("spinner-quantum").set_sensitive(estado)
+
     def actualizar_estado(self, estado):
         self.estado = estado
         self.redibujar()
