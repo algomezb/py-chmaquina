@@ -12,7 +12,7 @@
     <data>
       <row>
         <col id="0" translatable="yes">First come first served</col>
-        <col id="1" translatable="yes">FIFS</col>
+        <col id="1" translatable="yes">FCFS</col>
       </row>
       <row>
         <col id="0" translatable="yes">Shortest job first</col>
@@ -748,12 +748,13 @@
               </packing>
             </child>
             <child>
-              <object class="GtkComboBox">
+              <object class="GtkComboBox" id="combo-algoritmo">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="model">algoritmos</property>
                 <property name="active">0</property>
                 <property name="id_column">1</property>
+                <property name="active_id">RR</property>
                 <child>
                   <object class="GtkCellRendererText" id="algoritmo-renderer"/>
                   <attributes>

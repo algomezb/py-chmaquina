@@ -43,6 +43,7 @@ class InterfazChMaquina:
         self.constructor = constructor
         self.maquina = None
         self.estado = None
+        self.iterador = None
         self.ventana = constructor.get_object("chmaquina")
         self.tabla_memoria = constructor.get_object("tabla-memoria")
         self.tabla_variables = constructor.get_object("tabla-variables")
@@ -60,7 +61,8 @@ class InterfazChMaquina:
         self.preferencias = {
             "tamano_memoria": 512,
             "tamano_kernel": 79,
-            "algoritmo": "FAFS",
+            "algoritmo": "RR",
+            "quantum": 5,
         }
         self.redibujar()
 
@@ -84,17 +86,28 @@ class InterfazChMaquina:
             tamano_kernel=self.preferencias["tamano_kernel"],
             tamano_memoria=self.preferencias["tamano_memoria"],
             teclado=TecladoGtk(self.ventana),
+            quantum=self.preferencias["quantum"],
+            algoritmo=self.preferencias["algoritmo"],
         )
         self.actualizar_estado(self.maquina.encender())
 
     def on_siguiente_clicked(self, widget):
-        self.actualizar_estado(self.maquina.paso(self.estado))
+        if self.iterador is None:
+            self.iterador = self.maquina.iterar(self.estado)
+        try:
+            self.actualizar_estado(next(self.iterador))
+        except StopIteration:
+            self.iterador = None
 
     def on_continuo_clicked(self, widget):
-        for estado in self.maquina.iterar(self.estado):
+        if self.iterador is None:
+            self.iterador = self.maquina.iterar(self.estado)
+        for estado in self.iterador:
             self.actualizar_estado(estado)
 
     def on_apagar_clicked(self, widget):
+        self.iterador = None
+        self.maquina = None
         self.actualizar_estado(None)
 
     def on_cargar_clicked(self, widget):
@@ -125,6 +138,7 @@ class InterfazChMaquina:
                 self.actualizar_estado(
                     self.maquina.cargar(self.estado, programa.read())
                 )
+                self.iterador = None
 
         dialog.destroy()
 
@@ -138,6 +152,16 @@ class InterfazChMaquina:
             self.preferencias["tamano_kernel"] = int(
                 self.constructor.get_object("tamano-kernel").get_value()
             )
+            self.preferencias["algoritmo"] = self.constructor.get_object(
+                "combo-algoritmo"
+            ).get_active_id()
+
+            if not self.constructor.get_object("toggle-expropiativo").get_state():
+                self.preferencias["quantum"] = None
+            else:
+                self.preferencias["quantum"] = int(
+                    self.constructor.get_object("quantum").get_value()
+                )
         self.redibujar()
         dialogo_preferencias.hide()
 
@@ -193,6 +217,15 @@ class InterfazChMaquina:
         self.constructor.get_object("tamano-kernel").set_value(
             self.preferencias["tamano_kernel"]
         )
+        self.constructor.get_object("combo-algoritmo").set_active_id(
+            self.preferencias["algoritmo"]
+        )
+        if self.preferencias["quantum"] is None:
+            self.constructor.get_object("toggle-expropiativo").set_state(False)
+        else:
+            self.constructor.get_object("quantum").set_value(
+                self.preferencias["quantum"]
+            )
 
         if apagada:
             # maquina apagada
