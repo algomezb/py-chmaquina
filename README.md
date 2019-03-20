@@ -1,6 +1,6 @@
 # Implementación del ch-maquina en python
 
-![Interfaz del ch-maquina](capturas/esplendor.png)
+![Interfaz del ch-maquina](imagenes/esplendor.png)
 
 Para las futuras generaciones.
 
@@ -33,3 +33,8 @@ Luego para ejecutar la interfaz gráfica:
 ```
 chmaquina
 ```
+
+## Diseño
+
+
+![Diseño del ch-maquina](imagenes/ch-diseño.png)
