@@ -134,7 +134,7 @@ class Maquina(object):
             mensaje = estado.buscar_variable(programa, variable)["valor"]
             nuevo_estado.pantalla.append((programa, mensaje))
         elif operacion == "retorne":
-            nuevo_estado.terminados[programa] = linea
+            nuevo_estado.terminados[programa] = nuevo_estado.programas[programa]
             del nuevo_estado.programas[programa]
             nuevo_estado.listos.remove(programa)
             return nuevo_estado
@@ -156,14 +156,19 @@ class Maquina(object):
         return nuevo_estado
 
     def iterar(self, estado):
-        referencia = estado.copiar()
+        """
+        Ejecuta la ch maquina retornando cada estado hasta que no haya nada por hacer.
+        """
+        inicial = estado.copiar()
         nuevo_estado = estado.copiar()
         while not nuevo_estado.nada_por_hacer():
             temporal = self.paso(nuevo_estado)
-            transcurrido = temporal.reloj - referencia.reloj
-            if transcurrido >= self.quantum:
+            tiempo_transcurrido = temporal.reloj - inicial.reloj
+            quantum_agotado = tiempo_transcurrido >= self.quantum
+            programa_terminado = len(inicial.terminados) < len(temporal.terminados)
+            if quantum_agotado or programa_terminado:
                 temporal = self.planear(temporal)
-                referencia = temporal.copiar()
+                inicial = temporal.copiar()
             if temporal.nada_por_hacer():
                 temporal = self.planear(temporal)
             nuevo_estado = temporal
@@ -259,6 +264,14 @@ class Maquina(object):
             planeado.listos = list(
                 sorted(
                     planeado.listos, key=lambda n: estado.programas[n]["tiempo_rafaga"]
+                )
+            )
+
+        if self.algoritmo == "FCFS":
+            planeado.listos = list(
+                sorted(
+                    planeado.listos,
+                    key=lambda programa: estado.programas[programa]["tiempo_llegada"],
                 )
             )
 

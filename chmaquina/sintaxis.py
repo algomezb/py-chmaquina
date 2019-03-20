@@ -243,5 +243,7 @@ def estimar(lineas):
         else:
             # instrucción de cpu
             rafagas_cpu += 1
-    return rafagas_cpu + 4 * rafagas_io
+    # 1 rafaga de cpu toma 1 unidad de tiempo
+    # 1 rafaga de io toma aleatoriameente entre 1 y 9 unidades de tiempo
+    return rafagas_cpu + 5 * rafagas_io
 
